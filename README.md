@@ -1,16 +1,119 @@
-# React + Vite
+# EA Artefact Generator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Practical enterprise architecture artefact generation workspace for creating structured EA outputs, engagement materials, and export-ready architecture content.
 
-Currently, two official plugins are available:
+## Purpose
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+EA Artefact Generator exists to help architecture practitioners turn engagement context into usable enterprise architecture artefacts. It provides a browser-based workspace for capturing engagement information, generating artefact drafts, maintaining an artefact library, and exporting structured architecture objects for repository tools.
 
-## React Compiler
+The project is part of the Velocity Architecture ecosystem. It is focused on making architecture work concrete: context in, artefacts out, with enough structure to support governance, stakeholder communication, and follow-on repository capture.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Who It Is For
 
-## Expanding the ESLint configuration
+- Enterprise architects preparing engagement materials and architecture deliverables.
+- Solution architects who need structured outputs for governance, decision records, and stakeholder review.
+- Architecture teams building reusable artefact libraries across multiple engagements.
+- StudioSix and ZenCloudAU delivery work where architecture thinking needs to become working material quickly.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## What It Does
+
+Based on the current application files, the workspace supports:
+
+- Multiple saved engagements persisted in browser local storage.
+- Engagement context capture for organisation, initiative, outcomes, stakeholders, assumptions, risks, and constraints.
+- Artefact generation modes including generate, critique, executive summary, governance brief, risk analysis, missing decisions, and delivery backlog.
+- Audience targeting for roles such as CIO/CTO, CEO/board, program director, delivery manager, security architect, solution architect, procurement, and business owner.
+- An artefact library with draft, reviewed, and approved statuses.
+- Markdown artefact viewing, copying, and download.
+- Repository export objects with CSV download support.
+- Export mappings for tools including OrbusInfinity, LeanIX, Ardoq, Sparx EA, Bizzdesign, and generic CSV.
+
+## Live Demo
+
+[EA Artefact Generator](https://ea.velocityarchitecture.com.au/)
+
+## Screenshots
+
+![EA Artefact Generator home](docs/screenshots/ea-artefact-generator-home.png)
+
+![EA Artefact Generator workspace](docs/screenshots/ea-artefact-generator-workspace.png)
+
+![EA Artefact Generator export view](docs/screenshots/ea-artefact-generator-export.png)
+
+## How It Fits the Ecosystem
+
+EA Artefact Generator is a tooling layer for the Velocity Architecture Framework. Where VAF defines the architecture logic, viewpoints, and governance concepts, this workspace helps practitioners generate and manage the practical outputs that appear during an engagement.
+
+Within the broader ecosystem:
+
+- **Velocity Architecture Framework** provides the architecture method and decision-governance context.
+- **VAF-SA** provides the solution architecture delivery altitude and practitioner language.
+- **StudioSix** is the commercial delivery wrapper that can use this tool as part of architecture-led AI delivery.
+- **ZenCloudAU** is the public GitHub organisation and consulting context for the work.
+
+This repo should remain focused on artefact generation and export-ready architecture content. It should not become the core framework repository.
+
+## Tech Stack
+
+Confirmed from the current files:
+
+- React 19
+- React DOM 19
+- Vite 8
+- JavaScript / JSX
+- ESLint
+- Cloudflare Vite plugin
+- Wrangler
+- Static assets in `public/`
+
+Deployment-related files currently present:
+
+- `vite.config.js`
+- `wrangler.jsonc`
+
+## How to Run Locally
+
+Commands confirmed from `package.json`:
+
+```bash
+npm install
+npm run dev
+```
+
+Other available scripts:
+
+```bash
+npm run build
+npm run lint
+npm run preview
+npm run deploy
+```
+
+`preview` and `deploy` both run a build and then use Wrangler.
+
+## Project Status
+
+Usable.
+
+The application has a real workspace UI and implemented artefact/library/export behavior. It is not yet product-ready because license and data-flow documentation are incomplete.
+
+## Roadmap
+
+Near-term improvements:
+
+- Specify the license.
+- Document whether generated content is local-only or connected to an external AI/API service.
+- Add a short architecture diagram or workflow diagram.
+- Add example artefact outputs generated from a safe demo engagement.
+
+## Security and Data Notes
+
+The current workspace persists engagement data in browser local storage. The README does not currently confirm whether generation requires external API configuration or whether all behavior is local/demo-only.
+
+Do not enter confidential client information, private credentials, or regulated data until the data flow and deployment model are explicitly documented.
+
+No secrets are required by the local run commands listed in `package.json`.
+
+## License
+
+License not yet specified.
