@@ -72,7 +72,7 @@ const REVIEW_MODES = [
 
 const LIB_STATUSES = [
   { id: "draft",    label: "Draft",    bg: "#F3F4F6", color: "#6B7280" },
-  { id: "reviewed", label: "Reviewed", bg: "#EFF6FF", color: "#1D4ED8" },
+  { id: "reviewed", label: "Reviewed", bg: "rgba(232,99,10,0.08)", color: "#E8630A" },
   { id: "approved", label: "Approved", bg: "#F0FDF4", color: "#16A34A" },
 ];
 
@@ -942,7 +942,7 @@ export default function EAArtefactGenerator() {
 
   // ── Utilities ─────────────────────────────────────────────────────────────
 
-  const repoDotColor = k => ({ orbusinfinity:"#2563EB", leanix:"#059669", ardoq:"#D97706", sparx:"#7C3AED", bizzdesign:"#DC2626", generic:"#6B7280" })[k] || "#6B7280";
+  const repoDotColor = k => ({ orbusinfinity:"#E8630A", leanix:"#059669", ardoq:"#D97706", sparx:"#7C3AED", bizzdesign:"#DC2626", generic:"#6B7280" })[k] || "#6B7280";
 
   const activeEngs   = engagements.filter(e => e.status === "active");
   const archivedEngs = engagements.filter(e => e.status === "archived");
@@ -955,7 +955,7 @@ export default function EAArtefactGenerator() {
   // ─── RENDER ────────────────────────────────────────────────────────────────
 
   return (
-    <div style={{ height:"100vh", display:"flex", flexDirection:"column", background:"#F2F4F8", fontFamily:"'Segoe UI',system-ui,sans-serif", fontSize:"14px", color:"#1A2035", overflow:"hidden" }}>
+    <div style={{ height:"100vh", display:"flex", flexDirection:"column", background:"#F1F5F9", fontFamily:"'DM Sans',system-ui,sans-serif", fontSize:"14px", color:"#1A2035", overflow:"hidden" }}>
 
       <style>{`
         @keyframes spin { to { transform:rotate(360deg); } }
@@ -963,16 +963,16 @@ export default function EAArtefactGenerator() {
         ::-webkit-scrollbar { width:5px; height:5px; }
         ::-webkit-scrollbar-thumb { background:#D1D5DB; border-radius:4px; }
         button, select, input, textarea { font-family:inherit; }
-        .hvr:hover  { background:#F0F4FF !important; }
+        .hvr:hover  { background:rgba(232,99,10,0.06) !important; }
         .hvr2:hover { background:#F3F4F6 !important; }
         .hvr-red:hover { background:#FEF2F2 !important; color:#DC2626 !important; }
         .pill:hover { filter:brightness(1.08); }
         .btn-p { transition:filter .12s,box-shadow .12s,transform .12s; }
-        .btn-p:not(:disabled):hover { filter:brightness(1.06); transform:translateY(-1px); box-shadow:0 4px 14px rgba(37,99,235,.3); }
+        .btn-p:not(:disabled):hover { filter:brightness(1.06); transform:translateY(-1px); box-shadow:0 4px 14px rgba(232,99,10,.3); }
         .btn-p:disabled { opacity:.4; cursor:not-allowed; }
         .btn-g { transition:background .1s; }
         .btn-g:hover { background:#F3F4F6 !important; }
-        input:focus, textarea:focus, select:focus { outline:none; border-color:#2563EB !important; box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+        input:focus, textarea:focus, select:focus { outline:none; border-color:#E8630A !important; box-shadow:0 0 0 3px rgba(232,99,10,.12); }
         .md-body h1 { font-size:20px;font-weight:700;color:#111827;margin:0 0 14px;padding-bottom:10px;border-bottom:2px solid #E5E7EB;line-height:1.3; }
         .md-body h2 { font-size:16px;font-weight:700;color:#1F2937;margin:24px 0 10px; }
         .md-body h3 { font-size:14px;font-weight:700;color:#374151;margin:18px 0 8px;text-transform:uppercase;letter-spacing:.04em; }
@@ -982,26 +982,26 @@ export default function EAArtefactGenerator() {
         .md-body li { font-size:14px;line-height:1.75;color:#374151;margin-bottom:5px; }
         .md-body strong { color:#111827;font-weight:700; }
         .md-body em { color:#4B5563;font-style:italic; }
-        .md-body code { font-family:'Consolas','DM Mono',monospace;font-size:12px;background:#F3F4F6;padding:1px 6px;border-radius:3px;color:#1D4ED8; }
+        .md-body code { font-family:'Consolas','DM Mono',monospace;font-size:12px;background:#F3F4F6;padding:1px 6px;border-radius:3px;color:#E8630A; }
         .md-body hr { border:none;border-top:1px solid #E5E7EB;margin:20px 0; }
         .md-body table { width:100%;border-collapse:collapse;font-size:13px;margin:14px 0; }
         .md-body th { text-align:left;padding:10px 14px;background:#F3F4F6;color:#374151;font-weight:700;font-size:12px;border:1px solid #E5E7EB; }
         .md-body td { padding:9px 14px;color:#4B5563;border:1px solid #E5E7EB;vertical-align:top;line-height:1.6; }
         .md-body tr:nth-child(even) td { background:#F9FAFB; }
         .lib-card { transition:border-color .12s,box-shadow .12s; cursor:pointer; }
-        .lib-card:hover { border-color:#BFDBFE !important; box-shadow:0 2px 8px rgba(37,99,235,.08); }
-        .lib-card.active { border-color:#2563EB !important; background:#EFF6FF !important; }
+        .lib-card:hover { border-color:rgba(232,99,10,0.35) !important; box-shadow:0 2px 8px rgba(232,99,10,.08); }
+        .lib-card.active { border-color:#E8630A !important; background:rgba(232,99,10,0.08) !important; }
         .eng-row { transition:background .1s; cursor:pointer; }
-        .eng-row:hover { background:#F0F4FF; }
-        .eng-row.active { background:#EFF6FF; }
+        .eng-row:hover { background:rgba(232,99,10,0.06); }
+        .eng-row.active { background:rgba(232,99,10,0.08); }
       `}</style>
 
       {/* ═══ HEADER ═══════════════════════════════════════════════════════════ */}
-      <header style={{ background:"#fff", borderBottom:"1px solid #E2E6EF", height:"52px", display:"flex", alignItems:"center", padding:"0 16px 0 20px", gap:"12px", flexShrink:0, boxShadow:"0 1px 3px rgba(0,0,0,.06)" }}>
+      <header style={{ background:"#fff", borderBottom:"1px solid #E2E8F0", height:"52px", display:"flex", alignItems:"center", padding:"0 16px 0 20px", gap:"12px", flexShrink:0, boxShadow:"0 1px 3px rgba(0,0,0,.06)" }}>
 
         {/* Logo + title */}
         <div style={{ display:"flex", alignItems:"center", gap:"10px", flexShrink:0 }}>
-          <div style={{ width:"32px", height:"32px", background:"linear-gradient(135deg,#2563EB,#1E40AF)", borderRadius:"7px", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:"800", fontSize:"12px", color:"#fff", letterSpacing:"-0.02em" }}>EA</div>
+          <div style={{ width:"32px", height:"32px", background:"linear-gradient(135deg,#E8630A,#1E3A5F)", borderRadius:"7px", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:"800", fontSize:"12px", color:"#fff", letterSpacing:"-0.02em" }}>EA</div>
           <div style={{ fontSize:"13px", fontWeight:"700", color:"#111827", letterSpacing:"-0.01em", whiteSpace:"nowrap" }}>EA Artefact Generator</div>
         </div>
 
@@ -1016,7 +1016,7 @@ export default function EAArtefactGenerator() {
               onChange={e => setRenameVal(e.target.value)}
               onBlur={commitRename}
               onKeyDown={e => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") setRenaming(false); }}
-              style={{ border:"1px solid #2563EB", borderRadius:"7px", padding:"5px 10px", fontSize:"13px", fontWeight:"600", color:"#111827", outline:"none", width:"240px", boxShadow:"0 0 0 3px rgba(37,99,235,.12)" }}
+              style={{ border:"1px solid #E8630A", borderRadius:"7px", padding:"5px 10px", fontSize:"13px", fontWeight:"600", color:"#111827", outline:"none", width:"240px", boxShadow:"0 0 0 3px rgba(232,99,10,.12)" }}
             />
           ) : (
             <button
@@ -1039,7 +1039,7 @@ export default function EAArtefactGenerator() {
                   <span style={{ width:"7px", height:"7px", borderRadius:"50%", background:"#16A34A", flexShrink:0, display:"inline-block" }} />
                   <span style={{ flex:1, fontSize:"13px", fontWeight:"500", color:"#111827", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{e.name}</span>
                   <span style={{ fontSize:"11px", color:"#9CA3AF", flexShrink:0 }}>{e.library.length} artefacts</span>
-                  {e.id === activeId && <span style={{ fontSize:"11px", color:"#2563EB", flexShrink:0 }}>✓</span>}
+                  {e.id === activeId && <span style={{ fontSize:"11px", color:"#E8630A", flexShrink:0 }}>✓</span>}
                 </div>
               ))}
               {/* Archived */}
@@ -1057,7 +1057,7 @@ export default function EAArtefactGenerator() {
               )}
               {/* Footer actions */}
               <div style={{ borderTop:"1px solid #E5E7EB", padding:"8px" }}>
-                <button className="btn-g" style={{ width:"100%", padding:"8px 12px", border:"1px dashed #E5E7EB", borderRadius:"7px", background:"#fff", color:"#2563EB", fontSize:"12px", fontWeight:"600", cursor:"pointer", textAlign:"left" }} onClick={() => { setEngOpen(false); setNewEngDialog(true); }}>
+                <button className="btn-g" style={{ width:"100%", padding:"8px 12px", border:"1px dashed #E5E7EB", borderRadius:"7px", background:"#fff", color:"#E8630A", fontSize:"12px", fontWeight:"600", cursor:"pointer", textAlign:"left" }} onClick={() => { setEngOpen(false); setNewEngDialog(true); }}>
                   + New Engagement
                 </button>
               </div>
@@ -1080,12 +1080,12 @@ export default function EAArtefactGenerator() {
         {/* Context toggle */}
         <button
           className="btn-g"
-          style={{ display:"flex", alignItems:"center", gap:"7px", border:"1px solid #E5E7EB", borderRadius:"7px", padding:"6px 12px", cursor:"pointer", background: ctxOpen ? "#EFF6FF" : "#fff", color: ctxOpen ? "#2563EB" : "#374151", fontSize:"13px", fontWeight:"500", flexShrink:0 }}
+          style={{ display:"flex", alignItems:"center", gap:"7px", border:"1px solid #E5E7EB", borderRadius:"7px", padding:"6px 12px", cursor:"pointer", background: ctxOpen ? "rgba(232,99,10,0.08)" : "#fff", color: ctxOpen ? "#E8630A" : "#374151", fontSize:"13px", fontWeight:"500", flexShrink:0 }}
           onClick={() => setCtxOpen(o => !o)}
         >
           <span style={{ fontSize:"12px" }}>◈</span>
           Context
-          {Object.values(context).some(v => v?.trim()) && <span style={{ width:"7px", height:"7px", background:"#2563EB", borderRadius:"50%", display:"inline-block" }} />}
+          {Object.values(context).some(v => v?.trim()) && <span style={{ width:"7px", height:"7px", background:"#E8630A", borderRadius:"50%", display:"inline-block" }} />}
         </button>
 
         {/* Repo selector */}
@@ -1099,10 +1099,10 @@ export default function EAArtefactGenerator() {
             <div style={{ position:"absolute", top:"calc(100% + 6px)", right:0, background:"#fff", border:"1px solid #E5E7EB", borderRadius:"10px", overflow:"hidden", zIndex:300, minWidth:"190px", boxShadow:"0 8px 28px rgba(0,0,0,.14)" }}>
               <div style={{ padding:"9px 14px 7px", fontSize:"10px", color:"#6B7280", letterSpacing:".08em", textTransform:"uppercase", fontWeight:"700", borderBottom:"1px solid #F3F4F6" }}>Target Repository</div>
               {Object.entries(REPO_TOOLS).map(([key, cfg]) => (
-                <div key={key} className="hvr2" style={{ padding:"10px 16px", cursor:"pointer", fontSize:"13px", fontWeight:"500", display:"flex", alignItems:"center", gap:"10px", color: repo === key ? "#1D4ED8" : "#374151", background: repo === key ? "#EFF6FF" : "#fff", borderBottom:"1px solid #F9FAFB" }} onClick={() => { setRepo(key); setRepoOpen(false); }}>
+                <div key={key} className="hvr2" style={{ padding:"10px 16px", cursor:"pointer", fontSize:"13px", fontWeight:"500", display:"flex", alignItems:"center", gap:"10px", color: repo === key ? "#E8630A" : "#374151", background: repo === key ? "rgba(232,99,10,0.08)" : "#fff", borderBottom:"1px solid #F9FAFB" }} onClick={() => { setRepo(key); setRepoOpen(false); }}>
                   <span style={{ width:"8px", height:"8px", borderRadius:"50%", background:repoDotColor(key), flexShrink:0, display:"inline-block" }} />
                   {cfg.label}
-                  {repo === key && <span style={{ marginLeft:"auto", color:"#2563EB", fontSize:"12px" }}>✓</span>}
+                  {repo === key && <span style={{ marginLeft:"auto", color:"#E8630A", fontSize:"12px" }}>✓</span>}
                 </div>
               ))}
             </div>
@@ -1126,7 +1126,7 @@ export default function EAArtefactGenerator() {
             />
             <div style={{ display:"flex", gap:"8px", justifyContent:"flex-end" }}>
               <button className="btn-g" style={{ padding:"9px 18px", border:"1px solid #E5E7EB", borderRadius:"7px", cursor:"pointer", fontSize:"13px", background:"#fff", color:"#6B7280" }} onClick={() => setNewEngDialog(false)}>Cancel</button>
-              <button className="btn-p" style={{ padding:"9px 18px", border:"none", borderRadius:"7px", cursor:"pointer", fontSize:"13px", background:"linear-gradient(135deg,#2563EB,#1E40AF)", color:"#fff", fontWeight:"700" }} disabled={!newEngName.trim()} onClick={() => createEngagement(newEngName)}>Create</button>
+              <button className="btn-p" style={{ padding:"9px 18px", border:"none", borderRadius:"7px", cursor:"pointer", fontSize:"13px", background:"linear-gradient(135deg,#E8630A,#1E3A5F)", color:"#fff", fontWeight:"700" }} disabled={!newEngName.trim()} onClick={() => createEngagement(newEngName)}>Create</button>
             </div>
           </div>
         </div>
@@ -1134,7 +1134,7 @@ export default function EAArtefactGenerator() {
 
       {/* ═══ CONTEXT DRAWER ═══════════════════════════════════════════════════ */}
       {ctxOpen && (
-        <div style={{ background:"#fff", borderBottom:"1px solid #E2E6EF", padding:"14px 20px", flexShrink:0, boxShadow:"inset 0 -2px 6px rgba(0,0,0,.03)" }}>
+        <div style={{ background:"#fff", borderBottom:"1px solid #E2E8F0", padding:"14px 20px", flexShrink:0, boxShadow:"inset 0 -2px 6px rgba(0,0,0,.03)" }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"12px" }}>
             <div>
               <div style={{ fontSize:"14px", fontWeight:"700", color:"#111827" }}>Engagement Context</div>
@@ -1173,9 +1173,9 @@ export default function EAArtefactGenerator() {
       <div style={{ display:"flex", flex:1, overflow:"hidden", minHeight:0 }}>
 
         {/* ── LEFT SIDEBAR ─────────────────────────────────────────────────── */}
-        <nav style={{ width:"220px", background:"#fff", borderRight:"1px solid #E2E6EF", display:"flex", flexDirection:"column", flexShrink:0 }}>
+        <nav style={{ width:"220px", background:"#fff", borderRight:"1px solid #E2E8F0", display:"flex", flexDirection:"column", flexShrink:0 }}>
           {/* Sidebar tabs */}
-          <div style={{ display:"flex", borderBottom:"1px solid #E2E6EF", flexShrink:0 }}>
+          <div style={{ display:"flex", borderBottom:"1px solid #E2E8F0", flexShrink:0 }}>
             {[
               { id:"phases",      label:"Phases" },
               { id:"library",     label:`Library${library.length ? ` (${library.length})` : ""}` },
@@ -1183,7 +1183,7 @@ export default function EAArtefactGenerator() {
             ].map(t => (
               <button
                 key={t.id}
-                style={{ flex:1, padding:"9px 4px", border:"none", borderBottom: sidebarTab === t.id ? "2px solid #2563EB" : "2px solid transparent", background:"#fff", color: sidebarTab === t.id ? "#2563EB" : "#9CA3AF", fontSize:"11px", fontWeight:"700", letterSpacing:".03em", cursor:"pointer", transition:"color .1s", whiteSpace:"nowrap" }}
+                style={{ flex:1, padding:"9px 4px", border:"none", borderBottom: sidebarTab === t.id ? "2px solid #E8630A" : "2px solid transparent", background:"#fff", color: sidebarTab === t.id ? "#E8630A" : "#9CA3AF", fontSize:"11px", fontWeight:"700", letterSpacing:".03em", cursor:"pointer", transition:"color .1s", whiteSpace:"nowrap" }}
                 onClick={() => setSidebarTab(t.id)}
               >
                 {t.label}
@@ -1198,7 +1198,7 @@ export default function EAArtefactGenerator() {
               {ADM_PHASES.map(p => {
                 const active = phase.id === p.id;
                 return (
-                  <button key={p.id} className="hvr2" style={{ width:"100%", border:"none", textAlign:"left", padding:"8px 12px 8px 10px", cursor:"pointer", borderLeft: active ? `3px solid ${p.color}` : "3px solid transparent", background: active ? "#F0F4FF" : "#fff", display:"flex", gap:"8px", alignItems:"flex-start" }} onClick={() => selectPhase(p)}>
+                  <button key={p.id} className="hvr2" style={{ width:"100%", border:"none", textAlign:"left", padding:"8px 12px 8px 10px", cursor:"pointer", borderLeft: active ? `3px solid ${p.color}` : "3px solid transparent", background: active ? "rgba(232,99,10,0.06)" : "#fff", display:"flex", gap:"8px", alignItems:"flex-start" }} onClick={() => selectPhase(p)}>
                     <span style={{ width:"22px", height:"22px", borderRadius:"5px", background: active ? p.color : "#E5E7EB", display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:"9px", fontWeight:"800", color: active ? "#fff" : "#9CA3AF", flexShrink:0, marginTop:"1px", transition:"all .12s" }}>{p.short}</span>
                     <span style={{ display:"flex", flexDirection:"column", gap:"1px", minWidth:0 }}>
                       <span style={{ fontSize:"12px", fontWeight:"600", color: active ? "#111827" : "#6B7280", lineHeight:"1.3" }}>{p.label}</span>
@@ -1227,14 +1227,14 @@ export default function EAArtefactGenerator() {
                     <div
                       key={item.id}
                       className={`lib-card${isActive ? " active" : ""}`}
-                      style={{ border:"1px solid #E5E7EB", borderRadius:"8px", padding:"10px 11px", marginBottom:"6px", background: isActive ? "#EFF6FF" : "#fff" }}
+                      style={{ border:"1px solid #E5E7EB", borderRadius:"8px", padding:"10px 11px", marginBottom:"6px", background: isActive ? "rgba(232,99,10,0.08)" : "#fff" }}
                       onClick={() => { setLibraryView(item); setActiveTab("artefact"); }}
                     >
                       <div style={{ display:"flex", alignItems:"center", gap:"6px", marginBottom:"5px" }}>
                         <span style={{ padding:"1px 6px", borderRadius:"3px", background:item.phaseColor+"22", color:item.phaseColor, fontSize:"10px", fontWeight:"700" }}>{item.phaseShort}</span>
                         <span style={{ padding:"1px 6px", borderRadius:"3px", background:sc.bg, color:sc.color, fontSize:"10px", fontWeight:"600", marginLeft:"auto" }}>{sc.label}</span>
                       </div>
-                      <div style={{ fontSize:"12px", fontWeight:"600", color: isActive ? "#1D4ED8" : "#111827", lineHeight:"1.4", marginBottom:"4px" }}>{item.artefactTypeName}</div>
+                      <div style={{ fontSize:"12px", fontWeight:"600", color: isActive ? "#E8630A" : "#111827", lineHeight:"1.4", marginBottom:"4px" }}>{item.artefactTypeName}</div>
                       <div style={{ fontSize:"11px", color:"#9CA3AF" }}>
                         {REVIEW_MODES.find(m => m.id === item.mode)?.label ?? item.mode}
                         {item.audience ? ` · ${AUDIENCES.find(a => a.id === item.audience)?.label}` : ""}
@@ -1259,7 +1259,7 @@ export default function EAArtefactGenerator() {
           {sidebarTab === "engagements" && (
             <div style={{ overflowY:"auto", flex:1, display:"flex", flexDirection:"column" }}>
               <div style={{ padding:"10px 10px 6px" }}>
-                <button className="btn-g" style={{ width:"100%", padding:"8px 12px", border:"1px dashed #BFDBFE", borderRadius:"7px", background:"#F0F7FF", color:"#2563EB", fontSize:"12px", fontWeight:"600", cursor:"pointer" }} onClick={() => setNewEngDialog(true)}>+ New Engagement</button>
+                <button className="btn-g" style={{ width:"100%", padding:"8px 12px", border:"1px dashed rgba(232,99,10,0.35)", borderRadius:"7px", background:"rgba(232,99,10,0.06)", color:"#E8630A", fontSize:"12px", fontWeight:"600", cursor:"pointer" }} onClick={() => setNewEngDialog(true)}>+ New Engagement</button>
               </div>
               {/* Active engagements */}
               {activeEngs.length > 0 && (
@@ -1271,7 +1271,7 @@ export default function EAArtefactGenerator() {
                       <div key={e.id} className={`eng-row${isActive ? " active" : ""}`} style={{ padding:"9px 12px", borderTop:"1px solid #F3F4F6" }}>
                         <div style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"4px" }}>
                           <span style={{ width:"7px", height:"7px", borderRadius:"50%", background:"#16A34A", flexShrink:0, display:"inline-block" }} />
-                          <span style={{ flex:1, fontSize:"12px", fontWeight:"600", color: isActive ? "#1D4ED8" : "#111827", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }} onClick={() => switchEngagement(e.id)}>{e.name}</span>
+                          <span style={{ flex:1, fontSize:"12px", fontWeight:"600", color: isActive ? "#E8630A" : "#111827", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }} onClick={() => switchEngagement(e.id)}>{e.name}</span>
                         </div>
                         <div style={{ fontSize:"10px", color:"#9CA3AF", paddingLeft:"15px", marginBottom:"6px" }}>{e.library.length} artefacts · {fmtDate(e.updatedAt)}</div>
                         <div style={{ display:"flex", gap:"4px", paddingLeft:"15px" }}>
@@ -1294,7 +1294,7 @@ export default function EAArtefactGenerator() {
                       <div key={e.id} className="eng-row" style={{ padding:"9px 12px", borderTop:"1px solid #F3F4F6" }}>
                         <div style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"4px" }}>
                           <span style={{ width:"7px", height:"7px", borderRadius:"50%", background:"#D1D5DB", flexShrink:0, display:"inline-block" }} />
-                          <span style={{ flex:1, fontSize:"12px", fontWeight:"600", color: isActive ? "#1D4ED8" : "#6B7280", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }} onClick={() => switchEngagement(e.id)}>{e.name}</span>
+                          <span style={{ flex:1, fontSize:"12px", fontWeight:"600", color: isActive ? "#E8630A" : "#6B7280", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }} onClick={() => switchEngagement(e.id)}>{e.name}</span>
                         </div>
                         <div style={{ fontSize:"10px", color:"#9CA3AF", paddingLeft:"15px", marginBottom:"6px" }}>{e.library.length} artefacts · {fmtDate(e.updatedAt)}</div>
                         <div style={{ display:"flex", gap:"4px", paddingLeft:"15px" }}>
@@ -1315,7 +1315,7 @@ export default function EAArtefactGenerator() {
         <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", minWidth:0 }}>
 
           {/* Artefact pills */}
-          <div style={{ background:"#fff", borderBottom:"1px solid #E2E6EF", padding:"9px 18px", display:"flex", gap:"5px", flexWrap:"wrap", flexShrink:0 }}>
+          <div style={{ background:"#fff", borderBottom:"1px solid #E2E8F0", padding:"9px 18px", display:"flex", gap:"5px", flexWrap:"wrap", flexShrink:0 }}>
             {phase.artefacts.map(a => {
               const active = artefact.id === a.id;
               return (
@@ -1327,14 +1327,14 @@ export default function EAArtefactGenerator() {
           <div style={{ flex:1, display:"flex", overflow:"hidden", minHeight:0 }}>
 
             {/* ── FORM PANEL ──────────────────────────────────────────────── */}
-            <aside style={{ width:"330px", flexShrink:0, background:"#fff", borderRight:"1px solid #E2E6EF", overflowY:"auto", padding:"16px 15px", display:"flex", flexDirection:"column" }}>
+            <aside style={{ width:"330px", flexShrink:0, background:"#fff", borderRight:"1px solid #E2E8F0", overflowY:"auto", padding:"16px 15px", display:"flex", flexDirection:"column" }}>
 
               {/* Artefact header */}
               <div style={{ marginBottom:"14px" }}>
                 <div style={{ fontSize:"15px", fontWeight:"700", color:"#111827", lineHeight:"1.3", marginBottom:"3px" }}>{artefact.name}</div>
                 <div style={{ fontSize:"11px", color:"#9CA3AF" }}>{phase.label} · {phase.description}</div>
                 <div style={{ display:"flex", flexWrap:"wrap", gap:"4px", marginTop:"6px" }}>
-                  {artefact.objectTypes.map(t => <span key={t} style={{ background:"#EFF6FF", color:"#1D4ED8", padding:"2px 7px", borderRadius:"4px", fontSize:"10px", fontWeight:"600" }}>{t}</span>)}
+                  {artefact.objectTypes.map(t => <span key={t} style={{ background:"rgba(232,99,10,0.08)", color:"#E8630A", padding:"2px 7px", borderRadius:"4px", fontSize:"10px", fontWeight:"600" }}>{t}</span>)}
                 </div>
               </div>
 
@@ -1367,11 +1367,11 @@ export default function EAArtefactGenerator() {
                 <label style={{ display:"block", fontSize:"10px", fontWeight:"700", color:"#6B7280", marginBottom:"6px", letterSpacing:".05em", textTransform:"uppercase" }}>Generation Mode</label>
                 <div style={{ display:"flex", flexDirection:"column", gap:"3px" }}>
                   {REVIEW_MODES.map(m => (
-                    <button key={m.id} style={{ display:"flex", alignItems:"center", gap:"8px", padding:"7px 9px", border: mode === m.id ? "1px solid #BFDBFE" : "1px solid #E5E7EB", borderRadius:"7px", cursor:"pointer", background: mode === m.id ? "#EFF6FF" : "#F9FAFB", color: mode === m.id ? "#1D4ED8" : "#374151", textAlign:"left", transition:"all .1s" }} onClick={() => setMode(m.id)}>
+                    <button key={m.id} style={{ display:"flex", alignItems:"center", gap:"8px", padding:"7px 9px", border: mode === m.id ? "1px solid rgba(232,99,10,0.35)" : "1px solid #E5E7EB", borderRadius:"7px", cursor:"pointer", background: mode === m.id ? "rgba(232,99,10,0.08)" : "#F9FAFB", color: mode === m.id ? "#E8630A" : "#374151", textAlign:"left", transition:"all .1s" }} onClick={() => setMode(m.id)}>
                       <span style={{ fontSize:"13px", opacity:.6, flexShrink:0 }}>{m.icon}</span>
                       <span style={{ display:"flex", flexDirection:"column", minWidth:0 }}>
                         <span style={{ fontSize:"12px", fontWeight:"600", lineHeight:"1.3" }}>{m.label}</span>
-                        <span style={{ fontSize:"10px", color: mode === m.id ? "#3B82F6" : "#9CA3AF", lineHeight:"1.3" }}>{m.desc}</span>
+                        <span style={{ fontSize:"10px", color: mode === m.id ? "#E8630A" : "#9CA3AF", lineHeight:"1.3" }}>{m.desc}</span>
                       </span>
                     </button>
                   ))}
@@ -1379,7 +1379,7 @@ export default function EAArtefactGenerator() {
               </div>
 
               {/* Generate */}
-              <button className="btn-p" style={{ width:"100%", padding:"11px", borderRadius:"8px", border:"none", background:"linear-gradient(135deg,#2563EB,#1E40AF)", color:"#fff", fontSize:"13px", fontWeight:"700", letterSpacing:".03em", cursor:"pointer" }} disabled={!hasInputs || loading} onClick={generate}>
+              <button className="btn-p" style={{ width:"100%", padding:"11px", borderRadius:"8px", border:"none", background:"linear-gradient(135deg,#E8630A,#1E3A5F)", color:"#fff", fontSize:"13px", fontWeight:"700", letterSpacing:".03em", cursor:"pointer" }} disabled={!hasInputs || loading} onClick={generate}>
                 {loading ? "Generating…" : mode === "generate" ? "Generate Artefact" : `Run: ${modeCfg.label}`}
               </button>
 
@@ -1424,17 +1424,17 @@ export default function EAArtefactGenerator() {
             <main style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", minWidth:0, minHeight:0 }}>
 
               {/* Tab bar */}
-              <div style={{ background:"#fff", borderBottom:"1px solid #E2E6EF", padding:"0 20px", display:"flex", flexShrink:0 }}>
+              <div style={{ background:"#fff", borderBottom:"1px solid #E2E8F0", padding:"0 20px", display:"flex", flexShrink:0 }}>
                 {["artefact","export"].map(t => {
                   const active = activeTab === t;
                   return (
-                    <div key={t} style={{ padding:"12px 16px", fontSize:"11px", fontWeight:"700", letterSpacing:".04em", textTransform:"uppercase", cursor:"pointer", color: active ? "#2563EB" : "#9CA3AF", borderBottom: active ? "2px solid #2563EB" : "2px solid transparent", marginBottom:"-1px", userSelect:"none" }} onClick={() => setActiveTab(t)}>{tabLabel(t)}</div>
+                    <div key={t} style={{ padding:"12px 16px", fontSize:"11px", fontWeight:"700", letterSpacing:".04em", textTransform:"uppercase", cursor:"pointer", color: active ? "#E8630A" : "#9CA3AF", borderBottom: active ? "2px solid #E8630A" : "2px solid transparent", marginBottom:"-1px", userSelect:"none" }} onClick={() => setActiveTab(t)}>{tabLabel(t)}</div>
                   );
                 })}
               </div>
 
               {/* Scroll area */}
-              <div style={{ flex:1, overflowY:"auto", padding:"24px", background:"#F2F4F8", minHeight:0 }}>
+              <div style={{ flex:1, overflowY:"auto", padding:"24px", background:"#F1F5F9", minHeight:0 }}>
 
                 {/* Loading */}
                 {loading && (
@@ -1543,7 +1543,7 @@ export default function EAArtefactGenerator() {
                             <tr key={i}>
                               {repoConfig.map(obj, repoConfig).map((val, j) => (
                                 <td key={j} style={{ padding:"9px 14px", color:"#374151", borderBottom:"1px solid #F3F4F6", verticalAlign:"top", maxWidth:"200px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", background: i%2===1?"#FAFAFA":"#fff" }} title={String(val||"")}>
-                                  {j === 1 ? <span style={{ display:"inline-block", background:"#EFF6FF", color:"#1D4ED8", padding:"2px 7px", borderRadius:"4px", fontSize:"11px", fontWeight:"600" }}>{val}</span> : val || <span style={{ color:"#E5E7EB" }}>—</span>}
+                                  {j === 1 ? <span style={{ display:"inline-block", background:"rgba(232,99,10,0.08)", color:"#E8630A", padding:"2px 7px", borderRadius:"4px", fontSize:"11px", fontWeight:"600" }}>{val}</span> : val || <span style={{ color:"#E5E7EB" }}>—</span>}
                                 </td>
                               ))}
                             </tr>
