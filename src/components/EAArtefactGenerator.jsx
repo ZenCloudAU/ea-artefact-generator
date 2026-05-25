@@ -685,6 +685,7 @@ export default function EAArtefactGenerator() {
   const [renameVal,    setRenameVal]    = useState("");
   const [newEngDialog, setNewEngDialog] = useState(false);
   const [newEngName,   setNewEngName]   = useState("");
+  const [showDashboard, setShowDashboard] = useState(true);
 
   const repoRef    = useRef(null);
   const engRef     = useRef(null);
@@ -769,6 +770,7 @@ export default function EAArtefactGenerator() {
     setEngOpen(false);
     setNewEngDialog(false);
     setNewEngName("");
+    setShowDashboard(false);
   };
 
   const duplicateEngagement = id => {
@@ -1007,6 +1009,10 @@ export default function EAArtefactGenerator() {
 
         <div style={{ width:"1px", height:"24px", background:"#E5E7EB", flexShrink:0 }} />
 
+        {!showDashboard && (
+          <button style={{ border:"1px solid rgba(232,99,10,0.35)", borderRadius:"6px", padding:"5px 12px", cursor:"pointer", fontSize:"12px", fontWeight:600, color:"#E8630A", background:"rgba(232,99,10,0.06)", flexShrink:0, lineHeight:1 }} onClick={() => setShowDashboard(true)}>← Dashboard</button>
+        )}
+
         {/* Engagement switcher */}
         <div ref={engRef} style={{ position:"relative", flexShrink:0 }}>
           {renaming ? (
@@ -1171,6 +1177,137 @@ export default function EAArtefactGenerator() {
 
       {/* ═══ BODY ═════════════════════════════════════════════════════════════ */}
       <div style={{ display:"flex", flex:1, overflow:"hidden", minHeight:0 }}>
+
+        {showDashboard ? (
+          /* ══ DASHBOARD ══════════════════════════════════════════════════════ */
+          <div style={{ flex:1, overflowY:"auto", background:"#F1F5F9" }}>
+            {/* Hero */}
+            <div style={{ background:"linear-gradient(135deg,#1E3A5F 0%,#0F2238 100%)", padding:"52px 48px 44px", position:"relative", overflow:"hidden" }}>
+              <div style={{ position:"absolute", inset:0, backgroundImage:"radial-gradient(circle,rgba(255,255,255,0.04) 1px,transparent 1px)", backgroundSize:"24px 24px", pointerEvents:"none" }} />
+              <div style={{ position:"relative", zIndex:1, maxWidth:"900px" }}>
+                <div style={{ fontSize:"10px", fontWeight:800, letterSpacing:"0.14em", textTransform:"uppercase", color:"rgba(232,99,10,0.9)", marginBottom:"14px" }}>ZenCloud · VAF · TOGAF 10 ADM</div>
+                <h1 style={{ margin:0, fontFamily:"'Playfair Display', serif", fontSize:"clamp(32px,4vw,52px)", fontWeight:700, color:"#fff", lineHeight:1.1, letterSpacing:"-0.02em" }}>Enterprise Architecture<br/>Artefact Generator</h1>
+                <p style={{ margin:"16px 0 0", fontSize:"16px", color:"rgba(255,255,255,0.72)", lineHeight:1.65, maxWidth:"620px" }}>Generate TOGAF-aligned EA artefacts for every ADM phase — from Architecture Principles through Architecture Change Management. Production-quality outputs in seconds.</p>
+                <div style={{ display:"flex", gap:"28px", marginTop:"28px" }}>
+                  {[
+                    { n: engagements.length,                               label: "Engagements" },
+                    { n: engagements.reduce((s,e)=>(s+(e.library?.length||0)),0), label: "Artefacts Generated" },
+                    { n: ADM_PHASES.reduce((s,p)=>(s+p.artefacts.length),0),     label: "Artefact Types" },
+                  ].map(({ n, label }) => (
+                    <div key={label}>
+                      <div style={{ fontSize:"28px", fontWeight:700, color:"#E8630A", lineHeight:1 }}>{n}</div>
+                      <div style={{ fontSize:"11px", color:"rgba(255,255,255,0.55)", marginTop:"4px", fontWeight:600 }}>{label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Content grid */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 380px", gap:"24px", padding:"28px 32px", alignItems:"start" }}>
+
+              {/* LEFT — Engagements + Recent */}
+              <div style={{ display:"flex", flexDirection:"column", gap:"20px" }}>
+
+                {/* Engagements */}
+                <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:"12px", padding:"24px" }}>
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"16px" }}>
+                    <div>
+                      <div style={{ fontSize:"11px", fontWeight:800, letterSpacing:"0.1em", textTransform:"uppercase", color:"#E8630A" }}>Your Engagements</div>
+                      <div style={{ fontSize:"18px", fontWeight:700, color:"#111827", letterSpacing:"-0.02em", marginTop:"4px" }}>Active workspaces</div>
+                    </div>
+                    <button
+                      style={{ background:"linear-gradient(135deg,#E8630A,#1E3A5F)", color:"#fff", border:"none", borderRadius:"8px", padding:"8px 16px", fontSize:"13px", fontWeight:700, cursor:"pointer" }}
+                      onClick={() => setNewEngDialog(true)}
+                    >+ New</button>
+                  </div>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"12px" }}>
+                    {engagements.filter(e=>!e.archived).map(e => {
+                      const isActive = e.id === activeId;
+                      const artCount = e.library?.length || 0;
+                      const ph = ADM_PHASES.find(p=>p.id===e.phaseId) ?? ADM_PHASES[1];
+                      return (
+                        <div
+                          key={e.id}
+                          style={{ border: isActive ? "2px solid #E8630A" : "1px solid #E2E8F0", borderRadius:"10px", padding:"16px", background: isActive ? "rgba(232,99,10,0.04)" : "#FAFAFA", cursor:"pointer", transition:"all .15s" }}
+                          onClick={() => { switchEngagement(e.id); setShowDashboard(false); }}
+                        >
+                          <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:"8px" }}>
+                            <div style={{ fontWeight:700, color:"#111827", fontSize:"14px", lineHeight:1.3 }}>{e.name}</div>
+                            {isActive && <span style={{ background:"rgba(232,99,10,0.12)", color:"#E8630A", fontSize:"10px", fontWeight:800, padding:"2px 7px", borderRadius:"4px", whiteSpace:"nowrap" }}>Active</span>}
+                          </div>
+                          <div style={{ marginTop:"8px", fontSize:"11px", color:"#6B7280" }}>{ph.short} · {ph.description}</div>
+                          <div style={{ marginTop:"8px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                            <div style={{ fontSize:"11px", color:"#9CA3AF" }}>{artCount} artefact{artCount!==1?"s":""}</div>
+                            <span style={{ fontSize:"12px", fontWeight:600, color:"#E8630A" }}>Continue →</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {engagements.filter(e=>e.archived).length > 0 && (
+                    <div style={{ marginTop:"12px", fontSize:"12px", color:"#9CA3AF" }}>{engagements.filter(e=>e.archived).length} archived engagement{engagements.filter(e=>e.archived).length!==1?"s":""} · accessible via Engagements tab in tool view</div>
+                  )}
+                </div>
+
+                {/* Recent artefacts */}
+                {(() => {
+                  const recent = engagements.flatMap(e=>(e.library||[]).map(a=>({...a, engName:e.name, engId:e.id}))).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,6);
+                  if (!recent.length) return null;
+                  return (
+                    <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:"12px", padding:"24px" }}>
+                      <div style={{ fontSize:"11px", fontWeight:800, letterSpacing:"0.1em", textTransform:"uppercase", color:"#E8630A", marginBottom:"4px" }}>Recent Artefacts</div>
+                      <div style={{ fontSize:"18px", fontWeight:700, color:"#111827", letterSpacing:"-0.02em", marginBottom:"16px" }}>Last generated</div>
+                      <div style={{ display:"flex", flexDirection:"column", gap:"8px" }}>
+                        {recent.map((a,i) => (
+                          <div
+                            key={i}
+                            style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 14px", background:"#F9FAFB", borderRadius:"8px", border:"1px solid #F3F4F6", cursor:"pointer" }}
+                            onClick={() => { switchEngagement(a.engId); setLibraryView(a); setActiveTab("artefact"); setSidebarTab("library"); setShowDashboard(false); }}
+                          >
+                            <div>
+                              <div style={{ fontWeight:600, color:"#111827", fontSize:"13px" }}>{a.artefactName}</div>
+                              <div style={{ fontSize:"11px", color:"#9CA3AF", marginTop:"2px" }}>{a.engName} · {fmtDate(a.createdAt)}</div>
+                            </div>
+                            <span style={{ fontSize:"11px", color:"#E8630A", fontWeight:600 }}>View →</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* RIGHT — Artefact Kit */}
+              <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:"12px", padding:"24px", position:"sticky", top:"24px", maxHeight:"calc(100vh - 120px)", overflowY:"auto" }}>
+                <div style={{ fontSize:"11px", fontWeight:800, letterSpacing:"0.1em", textTransform:"uppercase", color:"#E8630A", marginBottom:"4px" }}>Artefact Kit</div>
+                <div style={{ fontSize:"18px", fontWeight:700, color:"#111827", letterSpacing:"-0.02em", marginBottom:"6px" }}>All 10 ADM Phases</div>
+                <div style={{ fontSize:"13px", color:"#6B7280", marginBottom:"20px" }}>Click any artefact to open it in the generator</div>
+                <div style={{ display:"flex", flexDirection:"column", gap:"16px" }}>
+                  {ADM_PHASES.map(p => (
+                    <div key={p.id}>
+                      <div style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"8px" }}>
+                        <span style={{ background:p.color, color:"#fff", fontSize:"10px", fontWeight:800, padding:"2px 8px", borderRadius:"4px", letterSpacing:"0.06em" }}>{p.short}</span>
+                        <span style={{ fontSize:"12px", fontWeight:700, color:"#374151" }}>{p.label} · {p.description}</span>
+                      </div>
+                      <div style={{ display:"flex", flexWrap:"wrap", gap:"6px", paddingLeft:"4px" }}>
+                        {p.artefacts.map(a => (
+                          <button
+                            key={a.id}
+                            style={{ background:"#F1F5F9", border:"1px solid #E2E8F0", borderRadius:"6px", padding:"4px 10px", fontSize:"11px", fontWeight:600, color:"#374151", cursor:"pointer", textAlign:"left", transition:"all .12s" }}
+                            onMouseEnter={e => { e.currentTarget.style.background="rgba(232,99,10,0.08)"; e.currentTarget.style.borderColor="rgba(232,99,10,0.4)"; e.currentTarget.style.color="#E8630A"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background="#F1F5F9"; e.currentTarget.style.borderColor="#E2E8F0"; e.currentTarget.style.color="#374151"; }}
+                            onClick={() => { selectPhase(p); selectArtefact(a); setShowDashboard(false); }}
+                          >{a.name}</button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (<>
 
         {/* ── LEFT SIDEBAR ─────────────────────────────────────────────────── */}
         <nav style={{ width:"220px", background:"#fff", borderRight:"1px solid #E2E8F0", display:"flex", flexDirection:"column", flexShrink:0 }}>
@@ -1564,7 +1701,7 @@ export default function EAArtefactGenerator() {
               </div>
             </main>
           </div>
-        </div>
+        </>)}
       </div>
     </div>
   );
