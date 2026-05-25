@@ -1701,6 +1701,7 @@ export default function EAArtefactGenerator() {
               </div>
             </main>
           </div>
+        </div>
         </>)}
       </div>
     </div>
