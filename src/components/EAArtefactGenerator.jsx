@@ -686,8 +686,9 @@ export default function EAArtefactGenerator() {
   const [newEngDialog, setNewEngDialog] = useState(false);
   const [newEngName,   setNewEngName]   = useState("");
   const [showDashboard, setShowDashboard] = useState(true);
-  const [apiKey,       setApiKey]       = useState(() => localStorage.getItem('ea-api-key') || '');
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [apiKey,        setApiKey]        = useState(() => localStorage.getItem('ea-api-key') || '');
+  const [settingsOpen,  setSettingsOpen]  = useState(false);
+  const [formCollapsed, setFormCollapsed] = useState(false);
 
   const repoRef    = useRef(null);
   const engRef     = useRef(null);
@@ -1255,11 +1256,45 @@ export default function EAArtefactGenerator() {
               </div>
             </div>
 
-            {/* Content grid */}
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 380px", gap:"24px", padding:"28px 32px", alignItems:"start" }}>
+            {/* Content */}
+            <div style={{ maxWidth:"1100px", margin:"0 auto", padding:"28px 32px", display:"flex", flexDirection:"column", gap:"20px", width:"100%", boxSizing:"border-box" }}>
 
-              {/* LEFT — Engagements + Recent */}
-              <div style={{ display:"flex", flexDirection:"column", gap:"20px" }}>
+              {/* Quick Start */}
+              <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:"12px", padding:"24px" }}>
+                <div style={{ fontSize:"11px", fontWeight:800, letterSpacing:"0.1em", textTransform:"uppercase", color:"#E8630A", marginBottom:"4px" }}>Quick Start</div>
+                <div style={{ fontSize:"18px", fontWeight:700, color:"#111827", letterSpacing:"-0.02em", marginBottom:"16px" }}>Jump into an artefact</div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:"12px" }}>
+                  {[
+                    { phaseId:"phase-a",    artId:"arch-vision",    label:"Architecture Vision",          desc:"Scope, stakeholders, high-level solution concept",                  color:"#2B6CB0" },
+                    { phaseId:"preliminary",artId:"arch-principles", label:"Architecture Principles",      desc:"Organisation-wide guiding principles for architecture decisions",    color:"#4A5568" },
+                    { phaseId:"phase-e",    artId:"gap-analysis",    label:"Gap Analysis",                 desc:"Baseline vs target capability gaps across all domains",             color:"#44337A" },
+                    { phaseId:"adr",        artId:"adr-new",         label:"Architecture Decision Record", desc:"Capture, compare options, and justify key architectural decisions", color:"#065F46" },
+                  ].map(item => {
+                    const ph = ADM_PHASES.find(p => p.id === item.phaseId);
+                    const art = ph?.artefacts.find(a => a.id === item.artId);
+                    if (!ph || !art) return null;
+                    return (
+                      <button
+                        key={item.artId}
+                        style={{ background:"#F9FAFB", border:"1px solid #E2E8F0", borderRadius:"10px", padding:"16px", cursor:"pointer", textAlign:"left", transition:"all .15s" }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(232,99,10,0.4)"; e.currentTarget.style.background="rgba(232,99,10,0.04)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor="#E2E8F0"; e.currentTarget.style.background="#F9FAFB"; }}
+                        onClick={() => { selectPhase(ph); selectArtefact(art); setShowDashboard(false); }}
+                      >
+                        <span style={{ display:"inline-block", background:item.color, color:"#fff", fontSize:"10px", fontWeight:800, padding:"2px 8px", borderRadius:"4px", letterSpacing:"0.06em", marginBottom:"8px" }}>{ph.short}</span>
+                        <div style={{ fontWeight:700, color:"#111827", fontSize:"13px", lineHeight:1.3, marginBottom:"4px" }}>{item.label}</div>
+                        <div style={{ fontSize:"12px", color:"#6B7280", lineHeight:1.4 }}>{item.desc}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div style={{ marginTop:"16px", textAlign:"right" }}>
+                  <button
+                    style={{ background:"none", border:"none", color:"#E8630A", fontSize:"13px", fontWeight:600, cursor:"pointer", padding:0 }}
+                    onClick={() => setShowDashboard(false)}
+                  >Browse all artefact types →</button>
+                </div>
+              </div>
 
                 {/* Engagements */}
                 <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:"12px", padding:"24px" }}>
@@ -1328,35 +1363,6 @@ export default function EAArtefactGenerator() {
                     </div>
                   );
                 })()}
-              </div>
-
-              {/* RIGHT — Artefact Kit */}
-              <div style={{ background:"#fff", border:"1px solid #E2E8F0", borderRadius:"12px", padding:"24px", position:"sticky", top:"24px", maxHeight:"calc(100vh - 120px)", overflowY:"auto" }}>
-                <div style={{ fontSize:"11px", fontWeight:800, letterSpacing:"0.1em", textTransform:"uppercase", color:"#E8630A", marginBottom:"4px" }}>Artefact Kit</div>
-                <div style={{ fontSize:"18px", fontWeight:700, color:"#111827", letterSpacing:"-0.02em", marginBottom:"6px" }}>All 10 ADM Phases</div>
-                <div style={{ fontSize:"13px", color:"#6B7280", marginBottom:"20px" }}>Click any artefact to open it in the generator</div>
-                <div style={{ display:"flex", flexDirection:"column", gap:"16px" }}>
-                  {ADM_PHASES.map(p => (
-                    <div key={p.id}>
-                      <div style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"8px" }}>
-                        <span style={{ background:p.color, color:"#fff", fontSize:"10px", fontWeight:800, padding:"2px 8px", borderRadius:"4px", letterSpacing:"0.06em" }}>{p.short}</span>
-                        <span style={{ fontSize:"12px", fontWeight:700, color:"#374151" }}>{p.label} · {p.description}</span>
-                      </div>
-                      <div style={{ display:"flex", flexWrap:"wrap", gap:"6px", paddingLeft:"4px" }}>
-                        {p.artefacts.map(a => (
-                          <button
-                            key={a.id}
-                            style={{ background:"#F1F5F9", border:"1px solid #E2E8F0", borderRadius:"6px", padding:"4px 10px", fontSize:"11px", fontWeight:600, color:"#374151", cursor:"pointer", textAlign:"left", transition:"all .12s" }}
-                            onMouseEnter={e => { e.currentTarget.style.background="rgba(232,99,10,0.08)"; e.currentTarget.style.borderColor="rgba(232,99,10,0.4)"; e.currentTarget.style.color="#E8630A"; }}
-                            onMouseLeave={e => { e.currentTarget.style.background="#F1F5F9"; e.currentTarget.style.borderColor="#E2E8F0"; e.currentTarget.style.color="#374151"; }}
-                            onClick={() => { selectPhase(p); selectArtefact(a); setShowDashboard(false); }}
-                          >{a.name}</button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         ) : (<>
@@ -1516,7 +1522,12 @@ export default function EAArtefactGenerator() {
           <div style={{ flex:1, display:"flex", overflow:"hidden", minHeight:0 }}>
 
             {/* ── FORM PANEL ──────────────────────────────────────────────── */}
-            <aside style={{ width:"330px", flexShrink:0, background:"#fff", borderRight:"1px solid #E2E8F0", overflowY:"auto", padding:"16px 15px", display:"flex", flexDirection:"column" }}>
+            <aside style={{ width: formCollapsed ? "38px" : "330px", flexShrink:0, background:"#fff", borderRight:"1px solid #E2E8F0", display:"flex", flexDirection:"column", transition:"width .2s", overflow:"hidden" }}>
+              {formCollapsed ? (
+                <button style={{ flex:1, border:"none", background:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:"#9CA3AF", fontSize:"16px" }} onClick={() => setFormCollapsed(false)} title="Expand form panel">▶</button>
+              ) : (
+              <div style={{ overflowY:"auto", padding:"16px 15px", display:"flex", flexDirection:"column", flex:1 }}>
+              <div style={{ display:"flex", justifyContent:"flex-end", marginBottom:"4px" }}><button style={{ border:"none", background:"none", cursor:"pointer", color:"#CBD5E1", fontSize:"11px", padding:"0 2px", lineHeight:1 }} onClick={() => setFormCollapsed(true)} title="Collapse">◀</button></div>
 
               {/* Artefact header */}
               <div style={{ marginBottom:"14px" }}>
@@ -1607,6 +1618,7 @@ export default function EAArtefactGenerator() {
                   </div>
                 )}
               </div>
+              </div>)}
             </aside>
 
             {/* ── OUTPUT PANEL ─────────────────────────────────────────────── */}
