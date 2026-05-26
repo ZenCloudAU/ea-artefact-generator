@@ -686,6 +686,8 @@ export default function EAArtefactGenerator() {
   const [newEngDialog, setNewEngDialog] = useState(false);
   const [newEngName,   setNewEngName]   = useState("");
   const [showDashboard, setShowDashboard] = useState(true);
+  const [apiKey,       setApiKey]       = useState(() => localStorage.getItem('ea-api-key') || '');
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const repoRef    = useRef(null);
   const engRef     = useRef(null);
@@ -891,19 +893,34 @@ export default function EAArtefactGenerator() {
   // ── Generate ──────────────────────────────────────────────────────────────
 
   const generate = async () => {
+    if (!apiKey.trim()) {
+      setError("API key required — click ⚙ API Key in the header to configure your Anthropic key.");
+      setSettingsOpen(true);
+      return;
+    }
     setLoading(true); setError(""); setLibraryView(null);
     try {
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey.trim(),
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          model: "claude-sonnet-4-6",
           max_tokens: 4096,
           system: "You are a senior TOGAF 10 Enterprise Architect. Generate precise, professional architecture artefacts. Return only valid JSON as instructed.",
           messages: [{ role: "user", content: buildPrompt(phase, artefact, formData, context, mode, audience) }]
         })
       });
       const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 401) throw new Error("Invalid API key — check your ⚙ API Key configuration.");
+        if (res.status === 529) throw new Error("Anthropic API overloaded — wait a moment and retry.");
+        throw new Error(data.error?.message || `API error ${res.status}`);
+      }
       const raw   = data.content?.map(b => b.text || "").join("") || "";
       const clean = raw.replace(/```json|```/g, "").trim();
       const parsed= JSON.parse(clean);
@@ -919,8 +936,8 @@ export default function EAArtefactGenerator() {
       });
       setLibraryView(item);
       setActiveTab("artefact");
-    } catch {
-      setError("Generation failed — check inputs and retry.");
+    } catch (err) {
+      setError(err.message || "Generation failed — check inputs and retry.");
     }
     setLoading(false);
   };
@@ -957,7 +974,13 @@ export default function EAArtefactGenerator() {
   // ─── RENDER ────────────────────────────────────────────────────────────────
 
   return (
-    <div style={{ height:"100vh", display:"flex", flexDirection:"column", background:"#F1F5F9", fontFamily:"'DM Sans',system-ui,sans-serif", fontSize:"14px", color:"#1A2035", overflow:"hidden" }}>
+    <div style={{ height:"100vh", display:"flex", flexDirection:"column", background:"#F1F5F9", fontFamily:"'Inter',system-ui,sans-serif", fontSize:"14px", color:"#1A2035", overflow:"hidden" }}>
+
+      {/* ═══ ECOSYSTEM BAR ════════════════════════════════════════════════════ */}
+      <div style={{ background:"#0F172A", borderBottom:"1px solid #1E293B", padding:"5px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
+        <a href="https://zencloudau.github.io/vsf-match/" style={{ color:"#E8630A", fontFamily:"'DM Mono',monospace", fontSize:"11px", letterSpacing:"0.05em", textDecoration:"none" }}>← VSF Framework Home</a>
+        <span style={{ color:"#475569", fontFamily:"'DM Mono',monospace", fontSize:"11px", letterSpacing:"0.05em" }}>Velocity Architecture · ZenCloud · TOGAF 10 ADM</span>
+      </div>
 
       <style>{`
         @keyframes spin { to { transform:rotate(360deg); } }
@@ -1083,6 +1106,17 @@ export default function EAArtefactGenerator() {
 
         <div style={{ flex:1 }} />
 
+        {/* API Key toggle */}
+        <button
+          className="btn-g"
+          style={{ display:"flex", alignItems:"center", gap:"7px", border: !apiKey ? "1px solid #FECACA" : "1px solid #E5E7EB", borderRadius:"7px", padding:"6px 12px", cursor:"pointer", background: settingsOpen ? "rgba(232,99,10,0.08)" : !apiKey ? "#FEF2F2" : "#fff", color: settingsOpen ? "#E8630A" : !apiKey ? "#DC2626" : "#374151", fontSize:"13px", fontWeight:"500", flexShrink:0 }}
+          onClick={() => setSettingsOpen(o => !o)}
+        >
+          <span style={{ fontSize:"12px" }}>⚙</span>
+          API Key
+          {apiKey ? <span style={{ fontSize:"11px", color:"#16A34A", fontWeight:700 }}>✓</span> : <span style={{ fontSize:"11px", color:"#DC2626", fontWeight:700 }}>!</span>}
+        </button>
+
         {/* Context toggle */}
         <button
           className="btn-g"
@@ -1138,6 +1172,24 @@ export default function EAArtefactGenerator() {
         </div>
       )}
 
+      {/* ═══ API KEY DRAWER ═══════════════════════════════════════════════════ */}
+      {settingsOpen && (
+        <div style={{ background:"#FFFBEB", borderBottom:"1px solid #FDE68A", padding:"10px 20px", flexShrink:0 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:"12px", maxWidth:"800px" }}>
+            <label style={{ fontSize:"10px", fontWeight:800, color:"#92400E", letterSpacing:".08em", textTransform:"uppercase", whiteSpace:"nowrap" }}>Anthropic API Key</label>
+            <input
+              type="password"
+              style={{ flex:1, background:"#fff", border:"1px solid #FDE68A", borderRadius:"7px", padding:"7px 11px", fontSize:"13px", color:"#111827", outline:"none" }}
+              placeholder="sk-ant-api03-..."
+              value={apiKey}
+              onChange={e => { const v = e.target.value; setApiKey(v); localStorage.setItem('ea-api-key', v); }}
+            />
+            <span style={{ fontSize:"11px", color:"#92400E", opacity:.7, whiteSpace:"nowrap" }}>Stored locally · never sent to ZenCloud servers</span>
+            <button className="btn-g" style={{ border:"1px solid #FDE68A", borderRadius:"6px", padding:"5px 10px", cursor:"pointer", fontSize:"11px", color:"#92400E", background:"#fff" }} onClick={() => setSettingsOpen(false)}>✕</button>
+          </div>
+        </div>
+      )}
+
       {/* ═══ CONTEXT DRAWER ═══════════════════════════════════════════════════ */}
       {ctxOpen && (
         <div style={{ background:"#fff", borderBottom:"1px solid #E2E8F0", padding:"14px 20px", flexShrink:0, boxShadow:"inset 0 -2px 6px rgba(0,0,0,.03)" }}>
@@ -1186,7 +1238,7 @@ export default function EAArtefactGenerator() {
               <div style={{ position:"absolute", inset:0, backgroundImage:"radial-gradient(circle,rgba(255,255,255,0.04) 1px,transparent 1px)", backgroundSize:"24px 24px", pointerEvents:"none" }} />
               <div style={{ position:"relative", zIndex:1, maxWidth:"900px" }}>
                 <div style={{ fontSize:"10px", fontWeight:800, letterSpacing:"0.14em", textTransform:"uppercase", color:"rgba(232,99,10,0.9)", marginBottom:"14px" }}>ZenCloud · VAF · TOGAF 10 ADM</div>
-                <h1 style={{ margin:0, fontFamily:"'Playfair Display', serif", fontSize:"clamp(32px,4vw,52px)", fontWeight:700, color:"#fff", lineHeight:1.1, letterSpacing:"-0.02em" }}>Enterprise Architecture<br/>Artefact Generator</h1>
+                <h1 style={{ margin:0, fontSize:"clamp(32px,4vw,52px)", fontWeight:800, color:"#fff", lineHeight:1.1, letterSpacing:"-0.03em" }}>Enterprise Architecture<br/>Artefact Generator</h1>
                 <p style={{ margin:"16px 0 0", fontSize:"16px", color:"rgba(255,255,255,0.72)", lineHeight:1.65, maxWidth:"620px" }}>Generate TOGAF-aligned EA artefacts for every ADM phase — from Architecture Principles through Architecture Change Management. Production-quality outputs in seconds.</p>
                 <div style={{ display:"flex", gap:"28px", marginTop:"28px" }}>
                   {[
