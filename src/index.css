@@ -15,6 +15,31 @@
   --heading: 'Inter', system-ui, sans-serif;
   --mono: 'DM Mono', ui-monospace, monospace;
 
+  /* VAF master design system tokens */
+  --vaf-bg:             var(--bg);
+  --vaf-surface:        #FFFFFF;
+  --vaf-surface-raised: var(--code-bg);
+  --vaf-border:         var(--border);
+  --vaf-border-strong:  #CBD5E1;
+  --vaf-text:           var(--text-h);
+  --vaf-text-2:         var(--text);
+  --vaf-text-3:         #94A3B8;
+  --vaf-accent:         var(--accent);
+  --vaf-accent-hover:   #CC5508;
+  --vaf-accent-subtle:  var(--accent-bg);
+  --vaf-accent-border:  var(--accent-border);
+  --vaf-navy:           #1E3A5F;
+  --vaf-navy-dark:      #162D4A;
+  --vaf-font-heading:   'Playfair Display', Georgia, serif;
+  --vaf-font-body:      var(--sans);
+  --vaf-font-mono:      var(--mono);
+  --vaf-radius-sm:      4px;
+  --vaf-radius-md:      8px;
+  --vaf-radius-lg:      10px;
+  --vaf-shadow:         var(--shadow);
+  --vaf-shadow-md:      0 4px 12px rgba(15,23,42,0.08);
+  --vaf-transition:     200ms ease;
+
   font: 16px/1.65 var(--sans);
   letter-spacing: 0.01px;
   color-scheme: light;
