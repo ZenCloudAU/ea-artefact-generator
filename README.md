@@ -13,7 +13,7 @@ The project is part of the Velocity Architecture ecosystem. It is focused on mak
 - Enterprise architects preparing engagement materials and architecture deliverables.
 - Solution architects who need structured outputs for governance, decision records, and stakeholder review.
 - Architecture teams building reusable artefact libraries across multiple engagements.
-- StudioSix and ZenCloudAU delivery work where architecture thinking needs to become working material quickly.
+- StudioSix and ZenCloud Advisory delivery work where architecture thinking needs to become working material quickly.
 
 ## What It Does
 
@@ -46,10 +46,10 @@ EA Artefact Generator is a tooling layer for the Velocity Architecture Framework
 
 Within the broader ecosystem:
 
+- **ZenCloud Advisory** is the commercial advisory front door and client entry point.
+- **StudioSix** is the delivery studio that can use this tool as part of architecture-led AI delivery.
 - **Velocity Architecture Framework** provides the architecture method and decision-governance context.
 - **VAF-SA** provides the solution architecture delivery altitude and practitioner language.
-- **StudioSix** is the commercial delivery wrapper that can use this tool as part of architecture-led AI delivery.
-- **ZenCloudAU** is the public GitHub organisation and consulting context for the work.
 
 This repo should remain focused on artefact generation and export-ready architecture content. It should not become the core framework repository.
 
