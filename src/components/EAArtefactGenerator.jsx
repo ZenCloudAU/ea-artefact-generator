@@ -1,5 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
+import { ADM_PHASES } from "../data/phases.js";
+import { HINTS } from "../data/hints.js";
+import { MEETING_TYPES, INDUSTRIES, ORG_SIZES, PRIOR_ATTEMPTS, ATTENDEES, MEETING_PRIMER_SYSTEM_PROMPT, MEETING_PRIMER_OUTPUT_TEMPLATE } from "../data/meetingPrimer.js";
+import { toCSV, downloadFile } from "../utils/csvGenerator.js";
+import { generateArchiMateXML } from "../utils/xmlGenerator.js";
+import { genId } from "../utils/uuidHelper.js";
+
 // ─── STORAGE KEYS ─────────────────────────────────────────────────────────────
 
 const ENG_STORE  = "ea-engagements-v2";
@@ -87,345 +94,7 @@ const QUALITY_ITEMS = [
   { id: "owner",       label: "Owner / sponsor named",     keys: ["owner","sponsor"] },
 ];
 
-const ADM_PHASES = [
-  {
-    id: "preliminary", label: "Preliminary", short: "PRE", color: "#4A5568", description: "Framework & Principles",
-    artefacts: [
-      {
-        id: "arch-principles", name: "Architecture Principles Catalogue",
-        objectTypes: ["Architecture Principle"],
-        fields: [
-          { id: "domain",   label: "Architecture Domain",      type: "select",   options: ["Business","Data","Application","Technology","Security","All Domains"] },
-          { id: "context",  label: "Business Context & Drivers",type: "textarea", placeholder: "Strategic context, key drivers, constraints..." },
-          { id: "existing", label: "Existing Principles",       type: "textarea", placeholder: "Any existing principles to build from..." }
-        ]
-      },
-      {
-        id: "arch-repo", name: "Architecture Repository Structure",
-        objectTypes: ["Repository Object","Architecture Landscape","Reference Library","Standards Information Base"],
-        fields: [
-          { id: "maturity", label: "EA Maturity",     type: "select",   options: ["Initial / Ad-hoc","Developing","Defined","Managed","Optimising"] },
-          { id: "tools",    label: "Tooling in Use",  type: "text",     placeholder: "e.g. OrbusInfinity, LeanIX, Sparx EA..." },
-          { id: "scope",    label: "Repository Scope",type: "textarea", placeholder: "Domains, business units, systems in scope..." }
-        ]
-      }
-    ]
-  },
-  {
-    id: "phase-a", label: "Phase A", short: "A", color: "#2B6CB0", description: "Architecture Vision",
-    artefacts: [
-      {
-        id: "arch-vision", name: "Architecture Vision",
-        objectTypes: ["Architecture Vision","Business Goal","Architecture Requirement"],
-        fields: [
-          { id: "initiative", label: "Initiative / Programme",        type: "text",     placeholder: "e.g. Digital Transformation Programme" },
-          { id: "problem",    label: "Business Problem / Opportunity", type: "textarea", placeholder: "What problem are we solving?" },
-          { id: "vision",     label: "Target State Vision",           type: "textarea", placeholder: "Desired future state..." },
-          { id: "scope",      label: "Architecture Scope",            type: "textarea", placeholder: "In scope / out of scope..." },
-          { id: "timeline",   label: "Timeline",                      type: "text",     placeholder: "e.g. 18 months, FY2026" }
-        ]
-      },
-      {
-        id: "stakeholder-map", name: "Stakeholder Map & Matrix",
-        objectTypes: ["Stakeholder","Actor","Business Role"],
-        fields: [
-          { id: "initiative",   label: "Initiative",       type: "text",     placeholder: "e.g. Cloud Migration" },
-          { id: "stakeholders", label: "Key Stakeholders", type: "textarea", placeholder: "Name — Role\ne.g. Sarah Chen — CIO\nMark Williams — CFO" },
-          { id: "concerns",     label: "Primary Concerns", type: "textarea", placeholder: "Dominant concerns across the stakeholder group..." }
-        ]
-      },
-      {
-        id: "statement-of-work", name: "Statement of Architecture Work",
-        objectTypes: ["Work Package","Architecture Requirement","Deliverable"],
-        fields: [
-          { id: "sponsor",      label: "Architecture Sponsor",    type: "text",     placeholder: "Sponsoring executive name and role..." },
-          { id: "objectives",   label: "Architecture Objectives", type: "textarea", placeholder: "What must this engagement achieve?" },
-          { id: "deliverables", label: "Key Deliverables",        type: "textarea", placeholder: "Expected artefacts and outputs..." },
-          { id: "constraints",  label: "Constraints & Assumptions",type: "textarea",placeholder: "Budget, timeline, technology, policy constraints..." }
-        ]
-      }
-    ]
-  },
-  {
-    id: "phase-b", label: "Phase B", short: "B", color: "#276749", description: "Business Architecture",
-    artefacts: [
-      {
-        id: "capability-map", name: "Business Capability Map",
-        objectTypes: ["Business Capability"],
-        fields: [
-          { id: "industry",  label: "Industry / Sector",        type: "text",     placeholder: "e.g. Healthcare, Financial Services, Retail" },
-          { id: "mission",   label: "Organisational Mission",   type: "textarea", placeholder: "What does this organisation do and for whom?" },
-          { id: "strategic", label: "Strategic Priorities",     type: "textarea", placeholder: "Top 3-5 strategic priorities..." },
-          { id: "focus",     label: "Capability Focus Areas",   type: "textarea", placeholder: "Specific domains to emphasise or assess..." }
-        ]
-      },
-      {
-        id: "org-map", name: "Organisation Map",
-        objectTypes: ["Business Unit","Location","Actor","Business Role"],
-        fields: [
-          { id: "structure",  label: "Organisational Structure", type: "textarea", placeholder: "Divisions, business units, key functions..." },
-          { id: "locations",  label: "Geographic Locations",     type: "text",     placeholder: "e.g. Brisbane, Sydney, Auckland" },
-          { id: "headcount",  label: "Approximate Headcount",    type: "text",     placeholder: "e.g. 2,500 employees across 4 locations" }
-        ]
-      },
-      {
-        id: "actor-role-matrix", name: "Actor / Role Matrix",
-        objectTypes: ["Actor","Business Role","Business Process"],
-        fields: [
-          { id: "domain",     label: "Business Domain",        type: "text",     placeholder: "e.g. Customer Onboarding, Claims Processing" },
-          { id: "actors",     label: "Key Actors / Roles",     type: "textarea", placeholder: "e.g.\nCustomer\nRelationship Manager\nCredit Analyst" },
-          { id: "processes",  label: "Key Business Processes", type: "textarea", placeholder: "Processes these actors participate in..." }
-        ]
-      },
-      {
-        id: "value-chain", name: "Value Chain Diagram",
-        objectTypes: ["Business Function","Value Stream","Business Service"],
-        fields: [
-          { id: "industry",         label: "Industry / Sector",          type: "text",     placeholder: "e.g. Insurance, Banking, Aged Care" },
-          { id: "primary",          label: "Primary Activities",          type: "textarea", placeholder: "Core value-delivering activities in sequence..." },
-          { id: "support",          label: "Support Activities",          type: "textarea", placeholder: "HR, Finance, IT, Legal, etc..." },
-          { id: "differentiation",  label: "Competitive Differentiators", type: "textarea", placeholder: "Where does the organisation create unique value?" }
-        ]
-      },
-      {
-        id: "business-interaction", name: "Business Interaction Matrix",
-        objectTypes: ["Business Actor","Business Role","Business Collaboration"],
-        fields: [
-          { id: "units",        label: "Business Units / Functions", type: "textarea", placeholder: "List the units or functions to map interactions between..." },
-          { id: "interactions", label: "Key Interactions",           type: "textarea", placeholder: "Describe the primary interactions or exchanges..." }
-        ]
-      }
-    ]
-  },
-  {
-    id: "phase-c", label: "Phase C", short: "C", color: "#7B341E", description: "Information Systems",
-    artefacts: [
-      {
-        id: "app-portfolio", name: "Application Portfolio Catalogue",
-        objectTypes: ["Application Component","Application Service"],
-        fields: [
-          { id: "apps",     label: "Application Inventory", type: "textarea", placeholder: "App name — description\ne.g. Salesforce — CRM\nSAP — ERP\nWorkday — HR" },
-          { id: "criteria", label: "Assessment Criteria",   type: "textarea", placeholder: "Business value, technical health, vendor support, cost..." }
-        ]
-      },
-      {
-        id: "data-entity-matrix", name: "Data Entity / Business Function Matrix",
-        objectTypes: ["Data Entity","Data Object","Business Function"],
-        fields: [
-          { id: "entities",  label: "Key Data Entities",  type: "textarea", placeholder: "e.g. Customer, Product, Order, Account, Policy, Claim" },
-          { id: "functions", label: "Business Functions", type: "textarea", placeholder: "e.g. Sales, Marketing, Finance, Operations" }
-        ]
-      },
-      {
-        id: "app-communication", name: "Application Communication Diagram",
-        objectTypes: ["Application Component","Application Interface","Data Flow"],
-        fields: [
-          { id: "apps",         label: "Applications in Scope",       type: "textarea", placeholder: "e.g. CRM, ERP, Core Banking, Integration Platform" },
-          { id: "integrations", label: "Known Integration Patterns",  type: "textarea", placeholder: "Key flows, API/file/event patterns..." }
-        ]
-      },
-      {
-        id: "data-architecture", name: "Data Architecture Overview",
-        objectTypes: ["Data Entity","Data Store","Data Flow","Data Standard"],
-        fields: [
-          { id: "domains",    label: "Data Domains",              type: "textarea", placeholder: "e.g. Customer Data, Financial Data, Operational Data" },
-          { id: "platforms",  label: "Data Platforms",            type: "textarea", placeholder: "e.g. Azure Data Lake, Snowflake, SQL Server, Power BI" },
-          { id: "governance", label: "Data Governance Concerns",  type: "textarea", placeholder: "Ownership, quality, privacy, lineage concerns..." }
-        ]
-      }
-    ]
-  },
-  {
-    id: "phase-d", label: "Phase D", short: "D", color: "#702459", description: "Technology Architecture",
-    artefacts: [
-      {
-        id: "tech-standards", name: "Technology Standards Catalogue",
-        objectTypes: ["Technology Standard","Technology Principle","Platform"],
-        fields: [
-          { id: "cloud",       label: "Cloud Provider(s)",      type: "text",     placeholder: "e.g. Azure, AWS, GCP, Hybrid" },
-          { id: "domains",     label: "Technology Domains",     type: "textarea", placeholder: "e.g. Compute, Storage, Networking, Security, Integration" },
-          { id: "existing",    label: "Current Technology Stack",type: "textarea",placeholder: "Key technologies, platforms, tools in use..." },
-          { id: "constraints", label: "Standards Constraints",  type: "textarea", placeholder: "Regulatory, security, vendor constraints..." }
-        ]
-      },
-      {
-        id: "tech-portfolio", name: "Technology Portfolio Catalogue",
-        objectTypes: ["Technology Component","System Software","Device"],
-        fields: [
-          { id: "inventory",  label: "Technology Inventory",  type: "textarea", placeholder: "Product — version — purpose\ne.g. Windows Server 2019 — OS" },
-          { id: "lifecycle",  label: "Lifecycle Concerns",    type: "textarea", placeholder: "End-of-life, refresh, sunset items..." }
-        ]
-      },
-      {
-        id: "system-tech-matrix", name: "System / Technology Matrix",
-        objectTypes: ["Application Component","Technology Component","System"],
-        fields: [
-          { id: "systems", label: "Business Systems",        type: "textarea", placeholder: "List key business systems..." },
-          { id: "tech",    label: "Underlying Technologies", type: "textarea", placeholder: "Technology components hosting or supporting those systems..." }
-        ]
-      },
-      {
-        id: "network-architecture", name: "Network & Infrastructure Overview",
-        objectTypes: ["Network","Device","Communication Network","Location"],
-        fields: [
-          { id: "topology",  label: "Network Topology",           type: "textarea", placeholder: "On-premise, cloud, hybrid, edge considerations..." },
-          { id: "segments",  label: "Network Segments / Zones",   type: "textarea", placeholder: "e.g. DMZ, Corporate LAN, Cloud VNet, OT/IoT network..." },
-          { id: "security",  label: "Security Zones & Controls",  type: "textarea", placeholder: "Firewall boundaries, zero trust considerations..." }
-        ]
-      }
-    ]
-  },
-  {
-    id: "phase-e", label: "Phase E", short: "E", color: "#44337A", description: "Opportunities & Solutions",
-    artefacts: [
-      {
-        id: "gap-analysis", name: "Gap Analysis",
-        objectTypes: ["Gap","Architecture Requirement","Constraint"],
-        fields: [
-          { id: "domain",    label: "Architecture Domain",           type: "select",   options: ["Business","Data","Application","Technology","Security","All Domains"] },
-          { id: "baseline",  label: "Baseline Architecture Summary", type: "textarea", placeholder: "Current state — characteristics, pain points, constraints..." },
-          { id: "target",    label: "Target Architecture Summary",   type: "textarea", placeholder: "Future state — capabilities, outcomes, standards..." }
-        ]
-      },
-      {
-        id: "project-context", name: "Project Context Diagram",
-        objectTypes: ["Work Package","Deliverable","Plateau"],
-        fields: [
-          { id: "projects",     label: "Projects / Workstreams", type: "textarea", placeholder: "Proposed implementation projects or workstreams..." },
-          { id: "dependencies", label: "Key Dependencies",       type: "textarea", placeholder: "Inter-project or external dependencies..." },
-          { id: "sequencing",   label: "Sequencing Logic",       type: "textarea", placeholder: "What drives the order or grouping of projects?" }
-        ]
-      },
-      {
-        id: "benefits-diagram", name: "Benefits Diagram",
-        objectTypes: ["Driver","Goal","Outcome","Business Service"],
-        fields: [
-          { id: "initiative", label: "Initiative Name",       type: "text",     placeholder: "e.g. Cloud Modernisation" },
-          { id: "drivers",    label: "Strategic Drivers",     type: "textarea", placeholder: "Business outcomes this initiative drives toward..." },
-          { id: "benefits",   label: "Expected Benefits",     type: "textarea", placeholder: "Tangible and intangible benefits, with owners..." },
-          { id: "measures",   label: "Benefit Measures / KPIs",type: "textarea",placeholder: "How benefits will be measured and tracked..." }
-        ]
-      }
-    ]
-  },
-  {
-    id: "phase-f", label: "Phase F", short: "F", color: "#1A365D", description: "Migration Planning",
-    artefacts: [
-      {
-        id: "roadmap", name: "Architecture Roadmap",
-        objectTypes: ["Work Package","Plateau","Deliverable","Implementation and Migration Plan"],
-        fields: [
-          { id: "horizon",     label: "Planning Horizon",          type: "text",     placeholder: "e.g. 3 years, FY2025–FY2027" },
-          { id: "initiatives", label: "Initiatives & Projects",    type: "textarea", placeholder: "Initiatives to sequence with rough sizing..." },
-          { id: "waves",       label: "Migration Waves / Tranches",type: "textarea", placeholder: "How work is grouped into delivery waves..." },
-          { id: "constraints", label: "Constraints",               type: "textarea", placeholder: "Budget cycles, dependencies, resource constraints..." }
-        ]
-      },
-      {
-        id: "transition-architecture", name: "Transition Architecture States",
-        objectTypes: ["Plateau","Gap","Work Package"],
-        fields: [
-          { id: "baseline",    label: "Baseline State",              type: "textarea", placeholder: "Current architecture state..." },
-          { id: "target",      label: "Target State",                type: "textarea", placeholder: "End-state architecture..." },
-          { id: "transitions", label: "Number of Transition States", type: "select",   options: ["1","2","3","4"] },
-          { id: "drivers",     label: "Transition Drivers",          type: "textarea", placeholder: "What triggers movement between states?" }
-        ]
-      },
-      {
-        id: "migration-plan", name: "Implementation & Migration Plan",
-        objectTypes: ["Work Package","Deliverable","Plateau","Implementation and Migration Plan"],
-        fields: [
-          { id: "scope",    label: "Migration Scope",    type: "textarea", placeholder: "What is being migrated or transformed?" },
-          { id: "approach", label: "Migration Approach", type: "select",   options: ["Big Bang","Phased / Incremental","Parallel Run","Pilot then Scale","Strangler Fig"] },
-          { id: "risks",    label: "Key Migration Risks",type: "textarea", placeholder: "Data migration, cutover, rollback, business continuity..." },
-          { id: "timeline", label: "Timeline",           type: "text",     placeholder: "e.g. Q3 2025 — Q2 2026" }
-        ]
-      }
-    ]
-  },
-  {
-    id: "phase-g", label: "Phase G", short: "G", color: "#63171B", description: "Implementation Governance",
-    artefacts: [
-      {
-        id: "arch-contract", name: "Architecture Contract",
-        objectTypes: ["Architecture Contract","Constraint","Architecture Requirement"],
-        fields: [
-          { id: "project",      label: "Project / Delivery Name",    type: "text",     placeholder: "e.g. Core Banking Replacement" },
-          { id: "parties",      label: "Contracting Parties",        type: "textarea", placeholder: "Architecture team, delivery team, sponsor..." },
-          { id: "requirements", label: "Architecture Requirements",  type: "textarea", placeholder: "Standards and constraints the delivery must meet..." },
-          { id: "acceptance",   label: "Acceptance Criteria",        type: "textarea", placeholder: "What must be true for the architecture to be accepted as compliant?" }
-        ]
-      },
-      {
-        id: "compliance-assessment", name: "Compliance Assessment",
-        objectTypes: ["Constraint","Architecture Requirement","Gap","Architecture Contract"],
-        fields: [
-          { id: "project",   label: "Project / Solution Name",       type: "text",     placeholder: "e.g. Customer Portal Rebuild" },
-          { id: "standards", label: "Standards to Assess Against",   type: "textarea", placeholder: "Principles, standards, patterns to check compliance against..." },
-          { id: "solution",  label: "Solution Description",          type: "textarea", placeholder: "The solution being assessed..." }
-        ]
-      }
-    ]
-  },
-  {
-    id: "phase-h", label: "Phase H", short: "H", color: "#1D4044", description: "Architecture Change Mgmt",
-    artefacts: [
-      {
-        id: "change-request", name: "Architecture Change Request",
-        objectTypes: ["Change Request","Gap","Architecture Requirement"],
-        fields: [
-          { id: "trigger",     label: "Change Trigger",          type: "select",   options: ["Technology Change","Business Requirement","Regulatory/Compliance","Vendor End of Life","Incident / Lessons Learned","Strategic Shift"] },
-          { id: "description", label: "Change Description",      type: "textarea", placeholder: "Proposed change and what is driving it..." },
-          { id: "impact",      label: "Architecture Impact",     type: "textarea", placeholder: "Domains, artefacts, or principles affected..." },
-          { id: "disposition", label: "Recommended Disposition", type: "select",   options: ["Proceed (no ADM cycle needed)","Proceed (simplified ADM cycle)","Proceed (full ADM cycle)","Defer","Reject"] }
-        ]
-      }
-    ]
-  },
-  {
-    id: "req-mgmt", label: "Req. Mgmt", short: "RM", color: "#322659", description: "Requirements Management",
-    artefacts: [
-      {
-        id: "req-impact", name: "Requirements Impact Assessment",
-        objectTypes: ["Architecture Requirement","Constraint","Driver","Goal"],
-        fields: [
-          { id: "requirement", label: "Requirement Description",       type: "textarea", placeholder: "Describe the requirement in full..." },
-          { id: "source",      label: "Requirement Source",            type: "select",   options: ["Business Strategy","Regulatory / Legal","Technology Constraint","Stakeholder Request","Market / Customer","Risk / Security"] },
-          { id: "affected",    label: "Affected Architecture Domains", type: "textarea", placeholder: "Which domains does this requirement touch?" },
-          { id: "priority",    label: "Priority",                      type: "select",   options: ["Critical","High","Medium","Low"] }
-        ]
-      }
-    ]
-  },
-  {
-    id: "adr", label: "ADR", short: "ADR", color: "#065F46", description: "Architecture Decision Records",
-    artefacts: [
-      {
-        id: "adr-new", name: "Architecture Decision Record",
-        objectTypes: ["Architecture Decision"],
-        fields: [
-          { id: "title",        label: "Decision Title",            type: "text",     placeholder: "e.g. Adopt event-driven integration over point-to-point APIs" },
-          { id: "context",      label: "Context & Problem",         type: "textarea", placeholder: "Why is this decision needed? What is the problem?" },
-          { id: "options",      label: "Options Considered",        type: "textarea", placeholder: "Option A: ...\nOption B: ...\nOption C: ..." },
-          { id: "chosen",       label: "Chosen Option",             type: "text",     placeholder: "Which option was selected..." },
-          { id: "rationale",    label: "Rationale",                 type: "textarea", placeholder: "Why was this option chosen over alternatives?" },
-          { id: "consequences", label: "Consequences",              type: "textarea", placeholder: "Positive and negative consequences of this decision..." },
-          { id: "risks",        label: "Risks",                     type: "textarea", placeholder: "Risks introduced or mitigated by this decision..." },
-          { id: "owner",        label: "Decision Owner",            type: "text",     placeholder: "e.g. Enterprise Architect — Jane Smith" },
-          { id: "review",       label: "Review Date",               type: "text",     placeholder: "e.g. FY2026 Q2" }
-        ]
-      }
-    ]
-  }
-];
-
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
-
-function genId() {
-  return typeof crypto !== "undefined" && crypto.randomUUID
-    ? crypto.randomUUID()
-    : Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
 
 function fmtDate(iso) {
   if (!iso) return "";
@@ -497,19 +166,6 @@ Return ONLY valid JSON — no markdown fences, no preamble:
 }`;
 }
 
-function toCSV(objects, toolKey) {
-  const cfg = REPO_TOOLS[toolKey];
-  const rows = [cfg.columns, ...objects.map(o => cfg.map(o, cfg))];
-  return rows.map(r => r.map(v => `"${String(v||"").replace(/"/g,'""')}"`).join(",")).join("\n");
-}
-
-function downloadFile(content, filename, mime) {
-  const blob = new Blob([content], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = filename; a.click();
-  URL.revokeObjectURL(url);
-}
 
 function renderMarkdown(text) {
   if (!text) return "";
@@ -574,6 +230,14 @@ function getQualityScore(formData, context) {
   });
 }
 
+function getHints(artefactId, fieldId, value) {
+  const artHints = HINTS[artefactId];
+  if (!artHints) return null;
+  const fieldHints = artHints[fieldId];
+  if (!fieldHints) return null;
+  return fieldHints[value] || fieldHints["default"] || null;
+}
+
 // ─── ENGAGEMENT STORAGE ───────────────────────────────────────────────────────
 
 function newEngagement(name = "New Engagement") {
@@ -593,7 +257,7 @@ function newEngagement(name = "New Engagement") {
   };
 }
 
-function newLibraryItem(phase, artefact, mode, audience, markdown, objects) {
+function newLibraryItem(phase, artefact, mode, audience, markdown, objects, advisory) {
   return {
     id:              genId(),
     title:           artefact.name,
@@ -608,6 +272,7 @@ function newLibraryItem(phase, artefact, mode, audience, markdown, objects) {
     status:          "draft",
     markdown,
     objects,
+    advisory:        advisory || "",
     createdAt:       new Date().toISOString(),
     updatedAt:       new Date().toISOString(),
   };
@@ -659,6 +324,322 @@ function saveActiveId(id) {
   try { localStorage.setItem(ACTIVE_KEY, id); } catch { /* storage unavailable */ }
 }
 
+// ─── TAB COMPONENTS ───────────────────────────────────────────────────────────
+
+const EA_ADVISOR_SYSTEM_PROMPT = `You are a senior enterprise architect with 30 years of delivery experience. You have run major transformation programmes, merged organisations, and presented to boards. You are not academic. You are practical. You have seen every political situation an EA faces and you know how to navigate them. The person asking you is a certified EA with real delivery experience who has distanced himself from EA language and is returning to the profession. He does not need theory. He needs a plain English read of what is actually happening and specific practical advice on what to do. Be direct. Be honest. Do not hedge. If something is a bad idea, say so.`;
+
+function EAAdvisorTab({ apiKey }) {
+  const [situation,  setSituation]  = useState("");
+  const [context,    setContext]    = useState("");
+  const [uncertain,  setUncertain]  = useState("");
+  const [output,     setOutput]     = useState("");
+  const [loading,    setLoading]    = useState(false);
+  const [error,      setError]      = useState("");
+  const [copied,     setCopied]     = useState(false);
+
+  const generate = async () => {
+    if (!apiKey.trim()) { setError("API key required — configure via ⚙ API Key in the header."); return; }
+    setLoading(true); setError(""); setOutput("");
+    try {
+      const prompt = `Situation:
+${situation}
+
+Context:
+${context}
+
+What I am uncertain about:
+${uncertain}
+
+Respond using exactly this structure:
+
+WHAT IS ACTUALLY GOING ON
+─────────────────────────────────────────────────
+[Plain English read of the situation — no jargon]
+
+THE EA LANGUAGE VERSION
+─────────────────────────────────────────────────
+[How to frame this in EA terms for the room]
+
+HOW TO POSITION IT
+─────────────────────────────────────────────────
+[What to say, to whom, in what order]
+
+WHAT TO DO NEXT
+─────────────────────────────────────────────────
+[Specific next actions — not generic advice]
+
+IF YOU DO NOTHING
+─────────────────────────────────────────────────
+[Honest assessment of the risk of inaction]`;
+
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey.trim(),
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 2048,
+          system: EA_ADVISOR_SYSTEM_PROMPT,
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || `API error ${res.status}`);
+      const text = data.content?.map(b => b.text || "").join("") || "";
+      setOutput(text);
+    } catch (err) {
+      setError(err.message || "Generation failed.");
+    }
+    setLoading(false);
+  };
+
+  const hasInputs = situation.trim().length > 0;
+
+  const inputStyle = { width:"100%", background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:"7px", color:"#111827", padding:"8px 10px", fontSize:"13px", resize:"vertical", lineHeight:"1.65", boxSizing:"border-box" };
+  const labelStyle = { display:"block", fontSize:"10px", fontWeight:"700", color:"#6B7280", marginBottom:"4px", letterSpacing:".05em", textTransform:"uppercase" };
+
+  return (
+    <div style={{ flex:1, display:"flex", overflow:"hidden", minHeight:0 }}>
+      <aside style={{ width:"340px", flexShrink:0, background:"#fff", borderRight:"1px solid #E2E8F0", overflowY:"auto", padding:"20px 18px", display:"flex", flexDirection:"column", gap:"14px" }}>
+        <div>
+          <div style={{ fontSize:"15px", fontWeight:"700", color:"#111827", marginBottom:"4px" }}>EA Advisor</div>
+          <div style={{ fontSize:"12px", color:"#9CA3AF" }}>Think it through before you act. Plain English read + specific advice.</div>
+        </div>
+
+        <div>
+          <label style={labelStyle}>What happened or what was asked</label>
+          <textarea rows={5} style={inputStyle} placeholder="e.g. The CIO asked me to produce a capability map by Friday. The delivery lead told me separately that the programme is under review and nothing is getting approved." value={situation} onChange={e => setSituation(e.target.value)} />
+        </div>
+
+        <div>
+          <label style={labelStyle}>Context — who asked, what organisation, what stage</label>
+          <textarea rows={4} style={inputStyle} placeholder="e.g. Mid-size government agency, 3 months into engagement, stakeholders are divided, programme sponsor is new." value={context} onChange={e => setContext(e.target.value)} />
+        </div>
+
+        <div>
+          <label style={labelStyle}>What are you uncertain about</label>
+          <textarea rows={4} style={inputStyle} placeholder="e.g. Should I produce the capability map as asked even though it may not get used? Or should I raise the programme review issue first?" value={uncertain} onChange={e => setUncertain(e.target.value)} />
+        </div>
+
+        <button
+          style={{ width:"100%", padding:"11px", borderRadius:"8px", border:"none", background: hasInputs && !loading ? "linear-gradient(135deg,#E8630A,#1E3A5F)" : "#E5E7EB", color: hasInputs && !loading ? "#fff" : "#9CA3AF", fontSize:"13px", fontWeight:"700", letterSpacing:".03em", cursor: hasInputs && !loading ? "pointer" : "not-allowed" }}
+          disabled={!hasInputs || loading}
+          onClick={generate}
+        >
+          {loading ? "Thinking it through…" : "Get Advice"}
+        </button>
+
+        {error && <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:"8px", padding:"11px 12px", color:"#DC2626", fontSize:"13px", lineHeight:"1.5" }}>{error}</div>}
+      </aside>
+
+      <main style={{ flex:1, overflowY:"auto", padding:"28px", background:"#F1F5F9" }}>
+        {loading && (
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"100%", gap:"14px" }}>
+            <div style={{ width:"32px", height:"32px", border:"3px solid #E8630A30", borderTop:"3px solid #E8630A", borderRadius:"50%", animation:"spin .7s linear infinite" }} />
+            <div style={{ fontSize:"14px", fontWeight:"500", color:"#6B7280" }}>Reading the situation…</div>
+          </div>
+        )}
+
+        {!loading && !output && (
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"100%", textAlign:"center", padding:"40px 20px", gap:"14px" }}>
+            <div style={{ fontSize:"40px", opacity:.12 }}>💡</div>
+            <div style={{ fontSize:"16px", fontWeight:"700", color:"#9CA3AF" }}>What's the situation?</div>
+            <div style={{ fontSize:"13px", color:"#C4C9D4", maxWidth:"380px", lineHeight:"1.7" }}>Describe what happened, who asked, and what you're uncertain about. You'll get a plain English read of what's really going on and what to do next.</div>
+          </div>
+        )}
+
+        {!loading && output && (
+          <div style={{ maxWidth:"820px", margin:"0 auto" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"16px" }}>
+              <div style={{ fontSize:"17px", fontWeight:"700", color:"#111827" }}>EA Advisor</div>
+              <div style={{ display:"flex", gap:"8px" }}>
+                <button style={{ border:"1px solid #E5E7EB", borderRadius:"7px", padding:"6px 12px", cursor:"pointer", fontSize:"12px", fontWeight:"600", background: copied ? "#DCFCE7" : "#fff", color: copied ? "#166534" : "#374151" }} onClick={() => { navigator.clipboard.writeText(output); setCopied(true); setTimeout(() => setCopied(false), 2000); }}>{copied ? "Copied ✓" : "Copy"}</button>
+                <button style={{ border:"none", borderRadius:"7px", padding:"6px 12px", cursor:"pointer", fontSize:"12px", fontWeight:"600", background:"linear-gradient(135deg,#E8630A,#1E3A5F)", color:"#fff" }} onClick={generate}>Regenerate</button>
+              </div>
+            </div>
+            <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"10px", padding:"28px 32px", whiteSpace:"pre-wrap", fontFamily:"'DM Mono','Consolas',monospace", fontSize:"13px", lineHeight:"1.9", color:"#1F2937", boxShadow:"0 1px 4px rgba(0,0,0,.04)" }}>
+              {output}
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+function MeetingPrimerTab({ apiKey }) {
+  const [meetingType,    setMeetingType]    = useState("");
+  const [whatTheyAsked,  setWhatTheyAsked]  = useState("");
+  const [industry,       setIndustry]       = useState("");
+  const [attendees,      setAttendees]      = useState([]);
+  const [orgSize,        setOrgSize]        = useState("");
+  const [priorAttempts,  setPriorAttempts]  = useState("");
+  const [output,         setOutput]         = useState("");
+  const [loading,        setLoading]        = useState(false);
+  const [error,          setError]          = useState("");
+  const [copied,         setCopied]         = useState(false);
+
+  const toggleAttendee = id => setAttendees(prev =>
+    prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+  );
+
+  const generate = async () => {
+    if (!apiKey.trim()) { setError("API key required — configure via ⚙ API Key in the header."); return; }
+    setLoading(true); setError(""); setOutput("");
+    try {
+      const attendeeLabels = ATTENDEES.filter(a => attendees.includes(a.id)).map(a => a.label).join(", ");
+      const prompt = `Generate a meeting primer using this template:
+
+${MEETING_PRIMER_OUTPUT_TEMPLATE}
+
+Inputs:
+- Meeting Type: ${meetingType || "Not specified"}
+- What they asked for: ${whatTheyAsked || "Not specified"}
+- Industry: ${industry || "Not specified"}
+- Who is in the room: ${attendeeLabels || "Not specified"}
+- Organisation Size: ${orgSize || "Not specified"}
+- Have they tried this before: ${priorAttempts || "Not specified"}
+
+Fill every section of the template. Be specific to these inputs. Plain English. No EA jargon in the output — this is for Phil to read before walking in the room.`;
+
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey.trim(),
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 2048,
+          system: MEETING_PRIMER_SYSTEM_PROMPT,
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || `API error ${res.status}`);
+      const text = data.content?.map(b => b.text || "").join("") || "";
+      setOutput(text);
+    } catch (err) {
+      setError(err.message || "Generation failed.");
+    }
+    setLoading(false);
+  };
+
+  const hasInputs = meetingType || whatTheyAsked || industry;
+
+  const inputStyle = { width:"100%", background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:"7px", color:"#111827", padding:"8px 10px", fontSize:"13px", boxSizing:"border-box" };
+  const labelStyle = { display:"block", fontSize:"10px", fontWeight:"700", color:"#6B7280", marginBottom:"4px", letterSpacing:".05em", textTransform:"uppercase" };
+
+  return (
+    <div style={{ flex:1, display:"flex", overflow:"hidden", minHeight:0 }}>
+      <aside style={{ width:"340px", flexShrink:0, background:"#fff", borderRight:"1px solid #E2E8F0", overflowY:"auto", padding:"20px 18px", display:"flex", flexDirection:"column", gap:"14px" }}>
+        <div>
+          <div style={{ fontSize:"15px", fontWeight:"700", color:"#111827", marginBottom:"4px" }}>Meeting Primer</div>
+          <div style={{ fontSize:"12px", color:"#9CA3AF" }}>Walk into the room prepared. Fill in what you know — output in seconds.</div>
+        </div>
+
+        <div>
+          <label style={labelStyle}>Meeting Type</label>
+          <select style={{ ...inputStyle, cursor:"pointer", color: meetingType ? "#111827" : "#9CA3AF" }} value={meetingType} onChange={e => setMeetingType(e.target.value)}>
+            <option value="">Select…</option>
+            {MEETING_TYPES.map(t => <option key={t.id} value={t.label}>{t.label}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label style={labelStyle}>What did they ask for?</label>
+          <textarea rows={3} style={{ ...inputStyle, resize:"vertical", lineHeight:"1.65" }} placeholder="e.g. They want a capability map. They said they need to understand what they do before they can decide what to change." value={whatTheyAsked} onChange={e => setWhatTheyAsked(e.target.value)} />
+        </div>
+
+        <div>
+          <label style={labelStyle}>Industry</label>
+          <select style={{ ...inputStyle, cursor:"pointer", color: industry ? "#111827" : "#9CA3AF" }} value={industry} onChange={e => setIndustry(e.target.value)}>
+            <option value="">Select…</option>
+            {INDUSTRIES.map(i => <option key={i.id} value={i.label}>{i.label}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label style={labelStyle}>Who is in the room?</label>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:"6px", marginTop:"2px" }}>
+            {ATTENDEES.map(a => (
+              <button
+                key={a.id}
+                style={{ padding:"4px 10px", borderRadius:"16px", border: attendees.includes(a.id) ? "1px solid #E8630A" : "1px solid #E5E7EB", background: attendees.includes(a.id) ? "rgba(232,99,10,0.1)" : "#F9FAFB", color: attendees.includes(a.id) ? "#E8630A" : "#6B7280", fontSize:"12px", fontWeight:"600", cursor:"pointer" }}
+                onClick={() => toggleAttendee(a.id)}
+              >{a.label}</button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label style={labelStyle}>Organisation Size</label>
+          <select style={{ ...inputStyle, cursor:"pointer", color: orgSize ? "#111827" : "#9CA3AF" }} value={orgSize} onChange={e => setOrgSize(e.target.value)}>
+            <option value="">Select…</option>
+            {ORG_SIZES.map(s => <option key={s.id} value={s.label}>{s.label}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label style={labelStyle}>Have they tried this before?</label>
+          <select style={{ ...inputStyle, cursor:"pointer", color: priorAttempts ? "#111827" : "#9CA3AF" }} value={priorAttempts} onChange={e => setPriorAttempts(e.target.value)}>
+            <option value="">Select…</option>
+            {PRIOR_ATTEMPTS.map(p => <option key={p.id} value={p.label}>{p.label}</option>)}
+          </select>
+        </div>
+
+        <button
+          style={{ width:"100%", padding:"11px", borderRadius:"8px", border:"none", background: hasInputs && !loading ? "linear-gradient(135deg,#E8630A,#1E3A5F)" : "#E5E7EB", color: hasInputs && !loading ? "#fff" : "#9CA3AF", fontSize:"13px", fontWeight:"700", letterSpacing:".03em", cursor: hasInputs && !loading ? "pointer" : "not-allowed", transition:"all .1s" }}
+          disabled={!hasInputs || loading}
+          onClick={generate}
+        >
+          {loading ? "Generating primer…" : "Generate Meeting Primer"}
+        </button>
+
+        {error && <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:"8px", padding:"11px 12px", color:"#DC2626", fontSize:"13px", lineHeight:"1.5" }}>{error}</div>}
+      </aside>
+
+      <main style={{ flex:1, overflowY:"auto", padding:"28px", background:"#F1F5F9" }}>
+        {loading && (
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"100%", gap:"14px" }}>
+            <div style={{ width:"32px", height:"32px", border:"3px solid #E8630A30", borderTop:"3px solid #E8630A", borderRadius:"50%", animation:"spin .7s linear infinite" }} />
+            <div style={{ fontSize:"14px", fontWeight:"500", color:"#6B7280" }}>Reading the room…</div>
+          </div>
+        )}
+
+        {!loading && !output && (
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"100%", textAlign:"center", padding:"40px 20px", gap:"14px" }}>
+            <div style={{ fontSize:"40px", opacity:.12 }}>🗓</div>
+            <div style={{ fontSize:"16px", fontWeight:"700", color:"#9CA3AF" }}>Ready when you are</div>
+            <div style={{ fontSize:"13px", color:"#C4C9D4", maxWidth:"380px", lineHeight:"1.7" }}>Fill in what you know about the meeting on the left. The primer will tell you what to listen for, what not to say, and what to walk out with.</div>
+          </div>
+        )}
+
+        {!loading && output && (
+          <div style={{ maxWidth:"820px", margin:"0 auto" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"16px" }}>
+              <div style={{ fontSize:"17px", fontWeight:"700", color:"#111827" }}>Meeting Primer</div>
+              <div style={{ display:"flex", gap:"8px" }}>
+                <button style={{ border:"1px solid #E5E7EB", borderRadius:"7px", padding:"6px 12px", cursor:"pointer", fontSize:"12px", fontWeight:"600", background: copied ? "#DCFCE7" : "#fff", color: copied ? "#166534" : "#374151" }} onClick={() => { navigator.clipboard.writeText(output); setCopied(true); setTimeout(() => setCopied(false), 2000); }}>{copied ? "Copied ✓" : "Copy"}</button>
+                <button style={{ border:"none", borderRadius:"7px", padding:"6px 12px", cursor:"pointer", fontSize:"12px", fontWeight:"600", background:"linear-gradient(135deg,#E8630A,#1E3A5F)", color:"#fff" }} onClick={generate}>Regenerate</button>
+              </div>
+            </div>
+            <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"10px", padding:"28px 32px", whiteSpace:"pre-wrap", fontFamily:"'DM Mono','Consolas',monospace", fontSize:"13px", lineHeight:"1.9", color:"#1F2937", boxShadow:"0 1px 4px rgba(0,0,0,.04)" }}>
+              {output}
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
 // ─── COMPONENT ────────────────────────────────────────────────────────────────
 
 export default function EAArtefactGenerator() {
@@ -689,6 +670,7 @@ export default function EAArtefactGenerator() {
   const [apiKey,        setApiKey]        = useState(() => localStorage.getItem('ea-api-key') || '');
   const [settingsOpen,  setSettingsOpen]  = useState(false);
   const [formCollapsed, setFormCollapsed] = useState(false);
+  const [mainTab,       setMainTab]       = useState("artefact");
 
   const repoRef    = useRef(null);
   const engRef     = useRef(null);
@@ -912,7 +894,7 @@ export default function EAArtefactGenerator() {
         body: JSON.stringify({
           model: "claude-sonnet-4-6",
           max_tokens: 4096,
-          system: "You are a senior TOGAF 10 Enterprise Architect. Generate precise, professional architecture artefacts. Return only valid JSON as instructed.",
+          system: "You are a senior enterprise architect with 30 years of delivery experience across large-scale transformations, mergers, cloud migrations, and regulatory programmes. You are TOGAF 10 certified and have operated across financial services, healthcare, government, and enterprise sectors. You generate precise, professional TOGAF-aligned architecture artefacts. Your output is used in real engagements with real clients. Write as if this is going to an Architecture Review Board tomorrow. Use proper TOGAF 10 terminology and structure. Be specific — infer reasonable detail from the inputs provided based on industry context. Do not add disclaimers. Do not add meta-commentary. After the artefact, add an ADVISORY section in plain English covering: (1) How to present this artefact to the client — what to lead with, what to avoid. (2) What questions or pushback to expect and how to handle them. (3) An honest assessment of whether this is what the client actually needs right now or whether something else should come first. Return valid JSON only: { \"artefact\": \"string\", \"objects\": [], \"advisory\": \"string\" }",
           messages: [{ role: "user", content: buildPrompt(phase, artefact, formData, context, mode, audience) }]
         })
       });
@@ -925,7 +907,7 @@ export default function EAArtefactGenerator() {
       const raw   = data.content?.map(b => b.text || "").join("") || "";
       const clean = raw.replace(/```json|```/g, "").trim();
       const parsed= JSON.parse(clean);
-      const item  = newLibraryItem(phase, artefact, mode, audience, parsed.artefact || "", parsed.objects || []);
+      const item  = newLibraryItem(phase, artefact, mode, audience, parsed.artefact || "", parsed.objects || [], parsed.advisory || "");
       setEngagements(prev => {
         const updated = prev.map(e =>
           e.id === activeId
@@ -1228,8 +1210,34 @@ export default function EAArtefactGenerator() {
         </div>
       )}
 
+      {/* ═══ MAIN TAB BAR ══════════════════════════════════════════════════════ */}
+      <div style={{ background:"#fff", borderBottom:"2px solid #E2E8F0", padding:"0 20px", display:"flex", gap:"0", flexShrink:0 }}>
+        {[
+          { id:"primer",   label:"🗓 Meeting Primer" },
+          { id:"artefact", label:"📋 Artefact Generator" },
+          { id:"advisor",  label:"💡 EA Advisor" },
+        ].map(t => (
+          <button
+            key={t.id}
+            style={{
+              padding:"12px 20px", border:"none", background:"none", cursor:"pointer",
+              fontSize:"13px", fontWeight:"700", letterSpacing:".01em",
+              color: mainTab === t.id ? "#E8630A" : "#6B7280",
+              borderBottom: mainTab === t.id ? "2px solid #E8630A" : "2px solid transparent",
+              marginBottom:"-2px", transition:"color .1s"
+            }}
+            onClick={() => setMainTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       {/* ═══ BODY ═════════════════════════════════════════════════════════════ */}
       <div style={{ display:"flex", flex:1, overflow:"hidden", minHeight:0 }}>
+        {mainTab === "primer"   && <MeetingPrimerTab apiKey={apiKey} />}
+        {mainTab === "advisor"  && <EAAdvisorTab apiKey={apiKey} />}
+        {mainTab === "artefact" && (<>
 
         {showDashboard ? (
           /* ══ DASHBOARD ══════════════════════════════════════════════════════ */
@@ -1539,20 +1547,45 @@ export default function EAArtefactGenerator() {
               </div>
 
               {/* Fields */}
-              {artefact.fields.map(f => (
-                <div key={f.id} style={{ marginBottom:"12px" }}>
-                  <label style={{ display:"block", fontSize:"10px", fontWeight:"700", color:"#6B7280", marginBottom:"4px", letterSpacing:".05em", textTransform:"uppercase" }}>{f.label}</label>
-                  {f.type === "textarea"
-                    ? <textarea rows={3} style={{ width:"100%", background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:"7px", color:"#111827", padding:"8px 10px", fontSize:"13px", resize:"vertical", lineHeight:"1.65" }} placeholder={f.placeholder} value={formData[f.id]||""} onChange={e => setField(f.id, e.target.value)} />
-                    : f.type === "select"
-                    ? <select style={{ width:"100%", background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:"7px", color: formData[f.id] ? "#111827" : "#9CA3AF", padding:"8px 10px", fontSize:"13px", cursor:"pointer" }} value={formData[f.id]||""} onChange={e => setField(f.id, e.target.value)}>
-                        <option value="">Select…</option>
-                        {f.options.map(o => <option key={o} value={o}>{o}</option>)}
-                      </select>
-                    : <input type="text" style={{ width:"100%", background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:"7px", color:"#111827", padding:"8px 10px", fontSize:"13px" }} placeholder={f.placeholder} value={formData[f.id]||""} onChange={e => setField(f.id, e.target.value)} />
-                  }
-                </div>
-              ))}
+              {artefact.fields.map(f => {
+                const hints = getHints(artefact.id, f.id, formData[f.id] || "");
+                return (
+                  <div key={f.id} style={{ marginBottom:"12px" }}>
+                    <label style={{ display:"block", fontSize:"10px", fontWeight:"700", color:"#6B7280", marginBottom:"4px", letterSpacing:".05em", textTransform:"uppercase" }}>{f.label}</label>
+                    {f.type === "textarea"
+                      ? <textarea rows={3} style={{ width:"100%", background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:"7px", color:"#111827", padding:"8px 10px", fontSize:"13px", resize:"vertical", lineHeight:"1.65" }} placeholder={f.placeholder} value={formData[f.id]||""} onChange={e => setField(f.id, e.target.value)} />
+                      : f.type === "select"
+                      ? <select style={{ width:"100%", background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:"7px", color: formData[f.id] ? "#111827" : "#9CA3AF", padding:"8px 10px", fontSize:"13px", cursor:"pointer" }} value={formData[f.id]||""} onChange={e => setField(f.id, e.target.value)}>
+                          <option value="">Select…</option>
+                          {f.options.map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      : <input type="text" style={{ width:"100%", background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:"7px", color:"#111827", padding:"8px 10px", fontSize:"13px" }} placeholder={f.placeholder} value={formData[f.id]||""} onChange={e => setField(f.id, e.target.value)} />
+                    }
+                    {hints && (formData[f.id] || f.type === "select") && (
+                      <div style={{ marginTop:"6px", padding:"8px 10px", background:"#FFFBEB", border:"1px solid #FDE68A", borderRadius:"6px", display:"flex", flexDirection:"column", gap:"5px" }}>
+                        {hints.remember?.length > 0 && hints.remember.map((h, i) => (
+                          <div key={`r${i}`} style={{ display:"flex", gap:"6px", fontSize:"11px", lineHeight:"1.5" }}>
+                            <span style={{ color:"#D97706", flexShrink:0, fontWeight:"700" }}>💡</span>
+                            <span style={{ color:"#92400E" }}>{h}</span>
+                          </div>
+                        ))}
+                        {hints.watchout?.length > 0 && hints.watchout.map((h, i) => (
+                          <div key={`w${i}`} style={{ display:"flex", gap:"6px", fontSize:"11px", lineHeight:"1.5" }}>
+                            <span style={{ color:"#DC2626", flexShrink:0, fontWeight:"700" }}>⚠️</span>
+                            <span style={{ color:"#7F1D1D" }}>{h}</span>
+                          </div>
+                        ))}
+                        {hints.translate?.length > 0 && hints.translate.map((h, i) => (
+                          <div key={`t${i}`} style={{ display:"flex", gap:"6px", fontSize:"11px", lineHeight:"1.5" }}>
+                            <span style={{ color:"#2563EB", flexShrink:0, fontWeight:"700" }}>🔄</span>
+                            <span style={{ color:"#1E3A5F" }}>{h}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
 
               {/* Audience */}
               <div style={{ marginBottom:"12px" }}>
@@ -1594,7 +1627,7 @@ export default function EAArtefactGenerator() {
                 <div style={{ marginTop:"12px", background:"#F0FDF4", border:"1px solid #BBF7D0", borderRadius:"8px", padding:"11px" }}>
                   <div style={{ fontSize:"10px", fontWeight:"700", color:"#166534", letterSpacing:".05em", textTransform:"uppercase", marginBottom:"3px" }}>Export Ready</div>
                   <div style={{ fontSize:"12px", color:"#15803D", marginBottom:"7px" }}>{libraryView.objects.length} objects · {repoConfig.label}</div>
-                  <button className="btn-g" style={{ width:"100%", padding:"7px", background:"#16A34A", border:"none", borderRadius:"6px", color:"#fff", fontSize:"12px", fontWeight:"600", cursor:"pointer" }} onClick={() => downloadFile(toCSV(libraryView.objects, repo), `${libraryView.artefactTypeId}-${repo}.csv`, "text/csv;charset=utf-8;")}>↓ Download {repoConfig.label} CSV</button>
+                  <button className="btn-g" style={{ width:"100%", padding:"7px", background:"#16A34A", border:"none", borderRadius:"6px", color:"#fff", fontSize:"12px", fontWeight:"600", cursor:"pointer" }} onClick={() => downloadFile(toCSV(libraryView.objects, repo, REPO_TOOLS), `${libraryView.artefactTypeId}-${repo}.csv`, "text/csv;charset=utf-8;")}>↓ Download {repoConfig.label} CSV</button>
                 </div>
               )}
 
@@ -1704,7 +1737,16 @@ export default function EAArtefactGenerator() {
                       <div style={{ display:"flex", gap:"6px", flexShrink:0, marginLeft:"14px" }}>
                         <button className="btn-g" style={{ border:"1px solid #E5E7EB", borderRadius:"7px", padding:"6px 12px", cursor:"pointer", fontSize:"12px", fontWeight:"600", background: copied === "md" ? "#DCFCE7" : "#fff", color: copied === "md" ? "#166534" : "#374151" }} onClick={() => { navigator.clipboard.writeText(libraryView.markdown); setCopied("md"); setTimeout(() => setCopied(""), 2000); }}>{copied === "md" ? "Copied ✓" : "Copy MD"}</button>
                         <button className="btn-g" style={{ border:"1px solid #E5E7EB", borderRadius:"7px", padding:"6px 12px", cursor:"pointer", fontSize:"12px", fontWeight:"600", background:"#fff", color:"#374151" }} onClick={() => downloadFile(libraryView.markdown, `${libraryView.artefactTypeId}.md`, "text/markdown;charset=utf-8;")}>↓ MD</button>
-                        {libraryView.objects?.length > 0 && <button className="btn-g" style={{ border:"1px solid #E5E7EB", borderRadius:"7px", padding:"6px 12px", cursor:"pointer", fontSize:"12px", fontWeight:"600", background:"#fff", color:"#374151" }} onClick={() => downloadFile(toCSV(libraryView.objects, repo), `${libraryView.artefactTypeId}-${repo}.csv`, "text/csv;charset=utf-8;")}>↓ CSV</button>}
+                        {libraryView.objects?.length > 0 && <button className="btn-g" style={{ border:"1px solid #E5E7EB", borderRadius:"7px", padding:"6px 12px", cursor:"pointer", fontSize:"12px", fontWeight:"600", background:"#fff", color:"#374151" }} onClick={() => downloadFile(toCSV(libraryView.objects, repo, REPO_TOOLS), `${libraryView.artefactTypeId}-${repo}.csv`, "text/csv;charset=utf-8;")}>↓ CSV</button>}
+                        {libraryView.objects?.length > 0 && (
+                          <button className="btn-g" style={{ border:"1px solid #E5E7EB", borderRadius:"7px", padding:"6px 12px", cursor:"pointer", fontSize:"12px", fontWeight:"600", background:"#fff", color:"#374151" }}
+                            onClick={() => downloadFile(
+                              generateArchiMateXML(libraryView.artefactTypeName, libraryView.objects),
+                              `${libraryView.artefactTypeId}.xml`,
+                              "application/xml;charset=utf-8;"
+                            )}
+                          >↓ XML</button>
+                        )}
                         <button className="btn-g" style={{ border:"1px solid #E5E7EB", borderRadius:"7px", padding:"6px 12px", cursor:"pointer", fontSize:"12px", fontWeight:"600", background:"#fff", color:"#374151" }} onClick={() => duplicateLibraryItem(libraryView)}>⧉ Copy</button>
                         <button className="btn-g hvr-red" style={{ border:"1px solid #E5E7EB", borderRadius:"7px", padding:"6px 12px", cursor:"pointer", fontSize:"12px", fontWeight:"600", background:"#fff", color:"#9CA3AF" }} onClick={clearOutput}>✕</button>
                       </div>
@@ -1718,6 +1760,14 @@ export default function EAArtefactGenerator() {
                     </div>
                     {/* Rendered markdown */}
                     <div className="md-body" style={{ background:"#fff", padding:"30px 34px", borderRadius:"10px", border:"1px solid #E5E7EB", boxShadow:"0 1px 4px rgba(0,0,0,.04)" }} dangerouslySetInnerHTML={{ __html: renderMarkdown(libraryView.markdown) }} />
+                    {libraryView.advisory && (
+                      <div style={{ marginTop:"16px", background:"#F0F9FF", border:"1px solid #BAE6FD", borderRadius:"10px", padding:"24px 28px" }}>
+                        <div style={{ fontSize:"10px", fontWeight:"800", letterSpacing:"0.1em", textTransform:"uppercase", color:"#0369A1", marginBottom:"10px" }}>Advisory</div>
+                        <div style={{ whiteSpace:"pre-wrap", fontSize:"13px", lineHeight:"1.9", color:"#0C4A6E", fontFamily:"inherit" }}>
+                          {libraryView.advisory}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1730,8 +1780,8 @@ export default function EAArtefactGenerator() {
                         <div style={{ fontSize:"13px", color:"#6B7280", marginTop:"2px" }}>{libraryView.objects.length} objects · ready for upload</div>
                       </div>
                       <div style={{ display:"flex", gap:"7px" }}>
-                        <button className="btn-g" style={{ border:"1px solid #E5E7EB", borderRadius:"7px", padding:"7px 14px", cursor:"pointer", fontSize:"12px", fontWeight:"600", background: copied === "csv" ? "#DCFCE7" : "#fff", color: copied === "csv" ? "#166534" : "#374151" }} onClick={() => { navigator.clipboard.writeText(toCSV(libraryView.objects, repo)); setCopied("csv"); setTimeout(() => setCopied(""), 2000); }}>{copied === "csv" ? "Copied ✓" : "Copy CSV"}</button>
-                        <button className="btn-g" style={{ border:"1px solid #E5E7EB", borderRadius:"7px", padding:"7px 14px", cursor:"pointer", fontSize:"12px", fontWeight:"600", background:"#fff", color:"#374151" }} onClick={() => downloadFile(toCSV(libraryView.objects, repo), `${libraryView.artefactTypeId}-${repo}.csv`, "text/csv;charset=utf-8;")}>↓ Download CSV</button>
+                        <button className="btn-g" style={{ border:"1px solid #E5E7EB", borderRadius:"7px", padding:"7px 14px", cursor:"pointer", fontSize:"12px", fontWeight:"600", background: copied === "csv" ? "#DCFCE7" : "#fff", color: copied === "csv" ? "#166534" : "#374151" }} onClick={() => { navigator.clipboard.writeText(toCSV(libraryView.objects, repo, REPO_TOOLS)); setCopied("csv"); setTimeout(() => setCopied(""), 2000); }}>{copied === "csv" ? "Copied ✓" : "Copy CSV"}</button>
+                        <button className="btn-g" style={{ border:"1px solid #E5E7EB", borderRadius:"7px", padding:"7px 14px", cursor:"pointer", fontSize:"12px", fontWeight:"600", background:"#fff", color:"#374151" }} onClick={() => downloadFile(toCSV(libraryView.objects, repo, REPO_TOOLS), `${libraryView.artefactTypeId}-${repo}.csv`, "text/csv;charset=utf-8;")}>↓ Download CSV</button>
                       </div>
                     </div>
                     <div style={{ background:"#fff", borderRadius:"10px", border:"1px solid #E5E7EB", overflow:"auto", boxShadow:"0 1px 4px rgba(0,0,0,.04)" }}>
@@ -1766,6 +1816,7 @@ export default function EAArtefactGenerator() {
             </main>
           </div>
         </div>
+        </>)}
         </>)}
       </div>
     </div>
